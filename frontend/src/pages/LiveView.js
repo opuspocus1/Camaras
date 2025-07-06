@@ -11,7 +11,6 @@ import {
   FaCompress,
   FaVolumeUp,
   FaVolumeMute,
-  FaCog,
   FaCircle
 } from 'react-icons/fa';
 import LoadingSpinner from '../components/LoadingSpinner';

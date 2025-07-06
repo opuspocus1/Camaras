@@ -25,7 +25,6 @@ const PlaybackView = () => {
   
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
-  const [streamData, setStreamData] = useState(null);
   const [isPlaying, setIsPlaying] = useState(false);
   const [isFullscreen, setIsFullscreen] = useState(false);
   const [isMuted, setIsMuted] = useState(false);
@@ -96,7 +95,6 @@ const PlaybackView = () => {
         params: { startTime, endTime, protocol: 2 }
       });
       
-      setStreamData(response.data.data);
       initializeHls(response.data.data.url);
     } catch (error) {
       console.error('Error fetching playback stream:', error);
