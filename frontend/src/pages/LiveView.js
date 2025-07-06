@@ -44,7 +44,7 @@ const LiveView = () => {
       clearTimeout(controlsTimer);
       destroyHls();
     };
-  }, [deviceSerial]);
+  }, [deviceSerial, fetchCameraInfo, fetchLiveStream]);
 
   const fetchCameraInfo = async () => {
     try {

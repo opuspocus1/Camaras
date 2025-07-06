@@ -3,7 +3,7 @@ import { useParams, Link } from 'react-router-dom';
 import axios from 'axios';
 import toast from 'react-hot-toast';
 import Hls from 'hls.js';
-import { format, subDays, startOfDay, endOfDay } from 'date-fns';
+import { format, subDays } from 'date-fns';
 import { 
   FaArrowLeft, 
   FaPlay, 
@@ -12,7 +12,6 @@ import {
   FaCompress,
   FaVolumeUp,
   FaVolumeMute,
-  FaCalendar,
   FaClock,
   FaSearch,
   FaHistory
@@ -55,7 +54,7 @@ const PlaybackView = () => {
       clearTimeout(controlsTimer);
       destroyHls();
     };
-  }, [deviceSerial]);
+  }, [deviceSerial, fetchCameraInfo, fetchRecords]);
 
   const fetchCameraInfo = async () => {
     try {
