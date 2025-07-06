@@ -40,21 +40,6 @@ const PlaybackView = () => {
     endTime: '23:59:59'
   });
 
-  useEffect(() => {
-    fetchCameraInfo();
-    fetchRecords();
-    
-    // Auto-hide controls after 3 seconds
-    const controlsTimer = setTimeout(() => {
-      setShowControls(false);
-    }, 3000);
-
-    return () => {
-      clearTimeout(controlsTimer);
-      destroyHls();
-    };
-  }, [deviceSerial, fetchCameraInfo, fetchRecords]);
-
   const fetchCameraInfo = async () => {
     try {
       const response = await axios.get('/api/cameras');
@@ -85,6 +70,21 @@ const PlaybackView = () => {
       setLoading(false);
     }
   };
+
+  useEffect(() => {
+    fetchCameraInfo();
+    fetchRecords();
+    
+    // Auto-hide controls after 3 seconds
+    const controlsTimer = setTimeout(() => {
+      setShowControls(false);
+    }, 3000);
+
+    return () => {
+      clearTimeout(controlsTimer);
+      destroyHls();
+    };
+  }, [deviceSerial, fetchCameraInfo, fetchRecords]);
 
   const fetchPlaybackStream = async (startTime, endTime) => {
     try {

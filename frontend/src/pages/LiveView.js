@@ -30,21 +30,6 @@ const LiveView = () => {
   const [showControls, setShowControls] = useState(true);
   const [cameraInfo, setCameraInfo] = useState(null);
 
-  useEffect(() => {
-    fetchCameraInfo();
-    fetchLiveStream();
-    
-    // Auto-hide controls after 3 seconds
-    const controlsTimer = setTimeout(() => {
-      setShowControls(false);
-    }, 3000);
-
-    return () => {
-      clearTimeout(controlsTimer);
-      destroyHls();
-    };
-  }, [deviceSerial, fetchCameraInfo, fetchLiveStream]);
-
   const fetchCameraInfo = async () => {
     try {
       const response = await axios.get('/api/cameras');
@@ -76,6 +61,21 @@ const LiveView = () => {
       setLoading(false);
     }
   };
+
+  useEffect(() => {
+    fetchCameraInfo();
+    fetchLiveStream();
+    
+    // Auto-hide controls after 3 seconds
+    const controlsTimer = setTimeout(() => {
+      setShowControls(false);
+    }, 3000);
+
+    return () => {
+      clearTimeout(controlsTimer);
+      destroyHls();
+    };
+  }, [deviceSerial, fetchCameraInfo, fetchLiveStream]);
 
   const initializeHls = (url) => {
     if (Hls.isSupported()) {
