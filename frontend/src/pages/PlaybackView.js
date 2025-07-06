@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import axios from 'axios';
 import toast from 'react-hot-toast';
@@ -40,7 +40,7 @@ const PlaybackView = () => {
     endTime: '23:59:59'
   });
 
-  const fetchCameraInfo = async () => {
+  const fetchCameraInfo = useCallback(async () => {
     try {
       const response = await axios.get('/api/cameras');
       const camera = response.data.cameras.find(cam => cam.deviceSerial === deviceSerial);
@@ -50,18 +50,16 @@ const PlaybackView = () => {
     } catch (error) {
       console.error('Error fetching camera info:', error);
     }
-  };
+  }, [deviceSerial]);
 
-  const fetchRecords = async () => {
+  const fetchRecords = useCallback(async () => {
     try {
       setLoading(true);
       const startTime = `${dateRange.startDate} ${dateRange.startTime}`;
       const endTime = `${dateRange.endDate} ${dateRange.endTime}`;
-      
       const response = await axios.get(`/api/ezviz/records/${deviceSerial}`, {
         params: { startTime, endTime }
       });
-      
       setRecords(response.data.data.records || []);
     } catch (error) {
       console.error('Error fetching records:', error);
@@ -69,7 +67,7 @@ const PlaybackView = () => {
     } finally {
       setLoading(false);
     }
-  };
+  }, [deviceSerial, dateRange]);
 
   useEffect(() => {
     fetchCameraInfo();

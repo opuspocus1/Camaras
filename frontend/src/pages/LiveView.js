@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import axios from 'axios';
 import toast from 'react-hot-toast';
@@ -30,7 +30,7 @@ const LiveView = () => {
   const [showControls, setShowControls] = useState(true);
   const [cameraInfo, setCameraInfo] = useState(null);
 
-  const fetchCameraInfo = async () => {
+  const fetchCameraInfo = useCallback(async () => {
     try {
       const response = await axios.get('/api/cameras');
       const camera = response.data.cameras.find(cam => cam.deviceSerial === deviceSerial);
@@ -40,17 +40,14 @@ const LiveView = () => {
     } catch (error) {
       console.error('Error fetching camera info:', error);
     }
-  };
+  }, [deviceSerial]);
 
-  const fetchLiveStream = async () => {
+  const fetchLiveStream = useCallback(async () => {
     try {
       setLoading(true);
       setError(null);
-      
       const response = await axios.get(`/api/ezviz/live/${deviceSerial}?protocol=2`);
       setStreamData(response.data.data);
-      
-      // Initialize HLS player
       initializeHls(response.data.data.url);
     } catch (error) {
       console.error('Error fetching live stream:', error);
@@ -60,7 +57,7 @@ const LiveView = () => {
     } finally {
       setLoading(false);
     }
-  };
+  }, [deviceSerial]);
 
   useEffect(() => {
     fetchCameraInfo();
