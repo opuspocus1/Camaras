@@ -60,7 +60,7 @@ const LiveView = () => {
     } finally {
       setLoading(false);
     }
-  }, [deviceSerial]);
+  }, [deviceSerial, initializeStream]);
 
   useEffect(() => {
     fetchCameraInfo();
