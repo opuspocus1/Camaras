@@ -1,5 +1,6 @@
 const axios = require('axios');
 const cron = require('node-cron');
+const qs = require('qs');
 
 class EzvizService {
   constructor() {
@@ -39,8 +40,9 @@ class EzvizService {
     }
 
     try {
+      const data = qs.stringify({ appKey, appSecret });
       const response = await axios.post('https://open.ezvizlife.com/api/lapp/token/get', 
-        `appKey=${appKey}&appSecret=${appSecret}`,
+        data,
         {
           headers: {
             'Content-Type': 'application/x-www-form-urlencoded'
