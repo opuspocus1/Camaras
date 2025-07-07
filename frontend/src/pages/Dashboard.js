@@ -16,6 +16,7 @@ import LoadingSpinner from '../components/LoadingSpinner';
 import AddCameraModal from '../components/AddCameraModal';
 import EditCameraModal from '../components/EditCameraModal';
 import { API_ENDPOINTS } from '../config/api';
+import { useAuth } from '../contexts/AuthContext';
 
 const Dashboard = () => {
   const [cameras, setCameras] = useState([]);
@@ -29,10 +30,14 @@ const Dashboard = () => {
     unencrypted: 0
   });
 
+  const { user, loading: authLoading } = useAuth();
+
   useEffect(() => {
-    fetchCameras();
-    fetchStats();
-  }, []);
+    if (!authLoading && user) {
+      fetchCameras();
+      fetchStats();
+    }
+  }, [authLoading, user]);
 
   const fetchCameras = async () => {
     try {
