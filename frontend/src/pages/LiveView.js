@@ -45,6 +45,16 @@ const LiveView = () => {
     }
   }, [deviceSerial]);
 
+  const initializeStream = useCallback((url) => {
+    destroyHls();
+    destroyFlv();
+    if (url.endsWith('.m3u8')) {
+      initializeHls(url);
+    } else if (url.endsWith('.flv')) {
+      initializeFlv(url);
+    }
+  }, []);
+
   const fetchLiveStream = useCallback(async () => {
     try {
       setLoading(true);
@@ -77,16 +87,6 @@ const LiveView = () => {
       destroyFlv();
     };
   }, [deviceSerial, fetchCameraInfo, fetchLiveStream]);
-
-  const initializeStream = (url) => {
-    destroyHls();
-    destroyFlv();
-    if (url.endsWith('.m3u8')) {
-      initializeHls(url);
-    } else if (url.endsWith('.flv')) {
-      initializeFlv(url);
-    }
-  };
 
   const initializeHls = (url) => {
     if (Hls.isSupported()) {
