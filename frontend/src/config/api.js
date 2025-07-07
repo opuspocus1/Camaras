@@ -16,7 +16,7 @@ export const API_ENDPOINTS = {
   // EZVIZ endpoints
   LIVE_STREAM: `${API_BASE_URL}/api/ezviz/live`,
   PLAYBACK: `${API_BASE_URL}/api/ezviz/playback`,
-  RECORDINGS: `${API_BASE_URL}/api/ezviz/recordings`,
+  RECORDINGS: `${API_BASE_URL}/api/ezviz/records`,
   STATUS: `${API_BASE_URL}/api/ezviz/status`,
   
   // Health check
