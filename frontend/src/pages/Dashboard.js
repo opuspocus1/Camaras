@@ -20,7 +20,6 @@ import { useAuth } from '../contexts/AuthContext';
 
 const Dashboard = () => {
   const [cameras, setCameras] = useState([]);
-  const [loading, setLoading] = useState(true);
   const [showAddModal, setShowAddModal] = useState(false);
   const [showEditModal, setShowEditModal] = useState(false);
   const [selectedCamera, setSelectedCamera] = useState(null);
@@ -46,8 +45,6 @@ const Dashboard = () => {
     } catch (error) {
       console.error('Error fetching cameras:', error);
       toast.error('Failed to load cameras');
-    } finally {
-      setLoading(false);
     }
   };
 
