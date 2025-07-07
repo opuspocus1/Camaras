@@ -15,6 +15,7 @@ import {
 import LoadingSpinner from '../components/LoadingSpinner';
 import AddCameraModal from '../components/AddCameraModal';
 import EditCameraModal from '../components/EditCameraModal';
+import { API_ENDPOINTS } from '../config/api';
 
 const Dashboard = () => {
   const [cameras, setCameras] = useState([]);
@@ -35,7 +36,7 @@ const Dashboard = () => {
 
   const fetchCameras = async () => {
     try {
-      const response = await axios.get('/api/cameras');
+      const response = await axios.get(API_ENDPOINTS.CAMERAS);
       setCameras(response.data.cameras);
     } catch (error) {
       console.error('Error fetching cameras:', error);
@@ -47,7 +48,7 @@ const Dashboard = () => {
 
   const fetchStats = async () => {
     try {
-      const response = await axios.get('/api/cameras/stats/summary');
+      const response = await axios.get(API_ENDPOINTS.CAMERAS + '/stats/summary');
       setStats(response.data);
     } catch (error) {
       console.error('Error fetching stats:', error);
@@ -56,7 +57,7 @@ const Dashboard = () => {
 
   const handleAddCamera = async (cameraData) => {
     try {
-      const response = await axios.post('/api/cameras', cameraData);
+      const response = await axios.post(API_ENDPOINTS.CAMERAS, cameraData);
       setCameras(prev => [response.data.camera, ...prev]);
       setStats(prev => ({
         ...prev,
@@ -74,7 +75,7 @@ const Dashboard = () => {
 
   const handleEditCamera = async (cameraData) => {
     try {
-      const response = await axios.put(`/api/cameras/${selectedCamera._id}`, cameraData);
+      const response = await axios.put(API_ENDPOINTS.CAMERA_BY_ID(selectedCamera._id), cameraData);
       setCameras(prev => 
         prev.map(cam => 
           cam._id === selectedCamera._id ? response.data.camera : cam
@@ -95,7 +96,7 @@ const Dashboard = () => {
     }
 
     try {
-      await axios.delete(`/api/cameras/${cameraId}`);
+      await axios.delete(API_ENDPOINTS.CAMERA_BY_ID(cameraId));
       setCameras(prev => prev.filter(cam => cam._id !== cameraId));
       setStats(prev => ({
         ...prev,

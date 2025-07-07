@@ -17,6 +17,7 @@ import {
   FaHistory
 } from 'react-icons/fa';
 import LoadingSpinner from '../components/LoadingSpinner';
+import { API_ENDPOINTS } from '../config/api';
 
 const PlaybackView = () => {
   const { deviceSerial } = useParams();
@@ -42,7 +43,7 @@ const PlaybackView = () => {
 
   const fetchCameraInfo = useCallback(async () => {
     try {
-      const response = await axios.get('/api/cameras');
+      const response = await axios.get(API_ENDPOINTS.CAMERAS);
       const camera = response.data.cameras.find(cam => cam.deviceSerial === deviceSerial);
       if (camera) {
         setCameraInfo(camera);
@@ -57,7 +58,7 @@ const PlaybackView = () => {
       setLoading(true);
       const startTime = `${dateRange.startDate} ${dateRange.startTime}`;
       const endTime = `${dateRange.endDate} ${dateRange.endTime}`;
-      const response = await axios.get(`/api/ezviz/records/${deviceSerial}`, {
+      const response = await axios.get(`${API_ENDPOINTS.RECORDINGS}/${deviceSerial}`, {
         params: { startTime, endTime }
       });
       setRecords(response.data.data.records || []);
@@ -89,7 +90,7 @@ const PlaybackView = () => {
       setLoading(true);
       setError(null);
       
-      const response = await axios.get(`/api/ezviz/playback/${deviceSerial}`, {
+      const response = await axios.get(`${API_ENDPOINTS.PLAYBACK}/${deviceSerial}`, {
         params: { startTime, endTime, protocol: 2 }
       });
       

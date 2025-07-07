@@ -14,6 +14,7 @@ import {
   FaCircle
 } from 'react-icons/fa';
 import LoadingSpinner from '../components/LoadingSpinner';
+import { API_ENDPOINTS } from '../config/api';
 
 const LiveView = () => {
   const { deviceSerial } = useParams();
@@ -32,7 +33,7 @@ const LiveView = () => {
 
   const fetchCameraInfo = useCallback(async () => {
     try {
-      const response = await axios.get('/api/cameras');
+      const response = await axios.get(API_ENDPOINTS.CAMERAS);
       const camera = response.data.cameras.find(cam => cam.deviceSerial === deviceSerial);
       if (camera) {
         setCameraInfo(camera);
@@ -46,7 +47,7 @@ const LiveView = () => {
     try {
       setLoading(true);
       setError(null);
-      const response = await axios.get(`/api/ezviz/live/${deviceSerial}?protocol=2`);
+      const response = await axios.get(`${API_ENDPOINTS.LIVE_STREAM}/${deviceSerial}?protocol=2`);
       setStreamData(response.data.data);
       initializeHls(response.data.data.url);
     } catch (error) {
