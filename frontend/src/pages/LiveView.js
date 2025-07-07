@@ -3,6 +3,7 @@ import { useParams, Link } from 'react-router-dom';
 import axios from 'axios';
 import toast from 'react-hot-toast';
 import Hls from 'hls.js';
+import flvjs from 'flv.js';
 import { 
   FaArrowLeft, 
   FaPlay, 
@@ -20,6 +21,7 @@ const LiveView = () => {
   const { deviceSerial } = useParams();
   const videoRef = useRef(null);
   const hlsRef = useRef(null);
+  const flvRef = useRef(null);
   
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -49,7 +51,7 @@ const LiveView = () => {
       setError(null);
       const response = await axios.get(`${API_ENDPOINTS.LIVE_STREAM}/${deviceSerial}?protocol=2`);
       setStreamData(response.data.data);
-      initializeHls(response.data.data.url);
+      initializeStream(response.data.data.url);
     } catch (error) {
       console.error('Error fetching live stream:', error);
       const message = error.response?.data?.error || 'Failed to load live stream';
@@ -72,8 +74,19 @@ const LiveView = () => {
     return () => {
       clearTimeout(controlsTimer);
       destroyHls();
+      destroyFlv();
     };
   }, [deviceSerial, fetchCameraInfo, fetchLiveStream]);
+
+  const initializeStream = (url) => {
+    destroyHls();
+    destroyFlv();
+    if (url.endsWith('.m3u8')) {
+      initializeHls(url);
+    } else if (url.endsWith('.flv')) {
+      initializeFlv(url);
+    }
+  };
 
   const initializeHls = (url) => {
     if (Hls.isSupported()) {
@@ -84,7 +97,7 @@ const LiveView = () => {
       });
       
       hls.loadSource(url);
-      hls.attachMedia(videoRef.current);
+      hls.attachMediaElement(videoRef.current);
       
       hls.on(Hls.Events.MANIFEST_PARSED, () => {
         setIsPlaying(true);
@@ -109,10 +122,27 @@ const LiveView = () => {
     }
   };
 
+  const initializeFlv = (url) => {
+    if (flvjs.isSupported() && videoRef.current) {
+      const flvPlayer = flvjs.createPlayer({ type: 'flv', url });
+      flvPlayer.attachMediaElement(videoRef.current);
+      flvPlayer.load();
+      flvPlayer.play();
+      flvRef.current = flvPlayer;
+    }
+  };
+
   const destroyHls = () => {
     if (hlsRef.current) {
       hlsRef.current.destroy();
       hlsRef.current = null;
+    }
+  };
+
+  const destroyFlv = () => {
+    if (flvRef.current) {
+      flvRef.current.destroy();
+      flvRef.current = null;
     }
   };
 
