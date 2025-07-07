@@ -9,7 +9,6 @@ const connectDB = require('./utils/database');
 const authRoutes = require('./routes/auth');
 const cameraRoutes = require('./routes/cameras');
 const ezvizRoutes = require('./routes/ezviz');
-const { initializeEzvizToken } = require('./services/ezvizService');
 
 const app = express();
 
@@ -74,10 +73,6 @@ const startServer = async () => {
   try {
     await connectDB();
     console.log('✅ Connected to MongoDB');
-    
-    // Initialize EZVIZ token
-    await initializeEzvizToken();
-    console.log('✅ EZVIZ token initialized');
     
     app.listen(PORT, () => {
       console.log(`🚀 Server running on port ${PORT}`);
