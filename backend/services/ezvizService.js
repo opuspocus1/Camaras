@@ -35,6 +35,9 @@ class EzvizService {
     const appKey = process.env.EZVIZ_APP_KEY;
     const appSecret = process.env.EZVIZ_APP_SECRET;
 
+    console.log('EZVIZ_APP_KEY:', appKey);
+    console.log('EZVIZ_APP_SECRET:', appSecret);
+
     if (!appKey || !appSecret) {
       throw new Error('EZVIZ_APP_KEY and EZVIZ_APP_SECRET must be configured');
     }
