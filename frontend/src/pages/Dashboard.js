@@ -121,7 +121,7 @@ const Dashboard = () => {
     setShowEditModal(true);
   };
 
-  if (loading) {
+  if (authLoading || !user) {
     return (
       <div className="min-h-screen flex items-center justify-center">
         <LoadingSpinner size="xl" />
