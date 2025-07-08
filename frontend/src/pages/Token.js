@@ -98,10 +98,8 @@ const Token = () => {
       params.append('deviceSerial', deviceSerial);
       if (playbackStart) params.append('startTime', playbackStart);
       if (playbackEnd) params.append('endTime', playbackEnd);
-      const response = await axios.post(
-        `${result.areaDomain}/api/v3/das/device/local/video/query`,
-        params,
-        { headers: { 'Content-Type': 'application/x-www-form-urlencoded' } }
+      const response = await axios.get(
+        `${result.areaDomain}/api/v3/das/device/local/video/query?${params.toString()}`
       );
       if (response.data.meta?.code === 200) {
         setRecordings(response.data.data || []);
