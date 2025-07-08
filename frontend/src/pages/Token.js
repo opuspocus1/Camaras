@@ -75,22 +75,23 @@ const Token = () => {
 
   React.useEffect(() => {
     let player;
-    if (liveResult && liveResult.url && videoRef.current) {
+    const videoEl = videoRef.current;
+    if (liveResult && liveResult.url && videoEl) {
       if (protocol === '4' && flvjs.isSupported()) {
         player = flvjs.createPlayer({ type: 'flv', url: liveResult.url });
-        player.attachMediaElement(videoRef.current);
+        player.attachMediaElement(videoEl);
         player.load();
         player.play();
       } else if (protocol === '2') {
-        videoRef.current.src = liveResult.url;
-        videoRef.current.load();
-        videoRef.current.play().catch(() => {});
+        videoEl.src = liveResult.url;
+        videoEl.load();
+        videoEl.play().catch(() => {});
       }
     }
     return () => {
       if (player) player.destroy();
-      if (videoRef.current && protocol === '2') {
-        videoRef.current.src = '';
+      if (videoEl && protocol === '2') {
+        videoEl.src = '';
       }
     };
   }, [liveResult, protocol]);
