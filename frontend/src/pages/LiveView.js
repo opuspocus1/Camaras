@@ -91,16 +91,7 @@ const LiveView = () => {
     }
   }, []);
 
-  // 3. Define initializeStream después y ajusta dependencias
-  const initializeStream = useCallback((url) => {
-    destroyHls();
-    destroyFlv();
-    if (url.endsWith('.m3u8')) {
-      initializeHls(url);
-    } else if (url.endsWith('.flv')) {
-      initializeFlv(url);
-    }
-  }, [initializeHls, initializeFlv]);
+  // Elimina initializeStream porque ya no se usa
 
   // 1. Define fetchLiveStream primero
   const fetchLiveStream = useCallback(async () => {
