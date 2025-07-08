@@ -9,7 +9,8 @@ const Token = () => {
   const [result, setResult] = useState(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
-  const [deviceSerial, setDeviceSerial] = useState('');
+  // Inicializa deviceSerial desde localStorage si existe
+  const [deviceSerial, setDeviceSerial] = useState(() => localStorage.getItem('deviceSerial') || '');
   const [liveResult, setLiveResult] = useState(null);
   const [liveError, setLiveError] = useState(null);
   const [liveLoading, setLiveLoading] = useState(false);
@@ -23,6 +24,13 @@ const Token = () => {
   const [playbackLoading, setPlaybackLoading] = useState(false);
   const [playbackError, setPlaybackError] = useState(null);
   const videoRef = React.useRef(null);
+
+  // Guarda deviceSerial en localStorage al cambiar
+  React.useEffect(() => {
+    if (deviceSerial) {
+      localStorage.setItem('deviceSerial', deviceSerial);
+    }
+  }, [deviceSerial]);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -229,6 +237,19 @@ const Token = () => {
   return (
     <div className="min-h-screen flex flex-col items-center justify-center bg-gray-100 p-4">
       <h1 className="text-2xl font-bold mb-6">EZVIZ Token Generator</h1>
+      {/* Device Serial Input (siempre visible y obligatorio) */}
+      <div className="bg-white shadow-md rounded px-8 pt-6 pb-8 mb-4 w-full max-w-md">
+        <div className="mb-4">
+          <label className="block text-gray-700 text-sm font-bold mb-2">Device Serial</label>
+          <input
+            type="text"
+            value={deviceSerial}
+            onChange={e => setDeviceSerial(e.target.value)}
+            className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
+            required
+          />
+        </div>
+      </div>
       <form onSubmit={handleSubmit} className="bg-white shadow-md rounded px-8 pt-6 pb-8 mb-4 w-full max-w-md">
         <div className="mb-4">
           <label className="block text-gray-700 text-sm font-bold mb-2">App Key</label>
@@ -266,21 +287,6 @@ const Token = () => {
           <div><strong>Area Domain:</strong> {result.areaDomain}</div>
         </div>
       )}
-      {/* Device Serial Input (compartido) */}
-      {result && (
-        <div className="bg-white shadow-md rounded px-8 pt-6 pb-8 mb-4 w-full max-w-md">
-          <div className="mb-4">
-            <label className="block text-gray-700 text-sm font-bold mb-2">Device Serial</label>
-            <input
-              type="text"
-              value={deviceSerial}
-              onChange={e => setDeviceSerial(e.target.value)}
-              className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
-              required
-            />
-          </div>
-        </div>
-      )}
       {/* Live View Section */}
       {result && (
         <form onSubmit={handleLiveView} className="bg-white shadow-md rounded px-8 pt-6 pb-8 mb-4 w-full max-w-md">
@@ -299,7 +305,7 @@ const Token = () => {
           <button
             type="submit"
             className="bg-green-500 hover:bg-green-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline"
-            disabled={liveLoading}
+            disabled={liveLoading || !deviceSerial}
           >
             {liveLoading ? 'Solicitando...' : 'Obtener Live View'}
           </button>
