@@ -90,10 +90,10 @@ const Token = () => {
     }
   };
 
-  // Helper para convertir datetime-local a 'YYYY-MM-DD HH:mm:ss'
+  // Helper para convertir ISO o T a 'YYYY-MM-DD HH:mm:ss'
   function toEzvizDate(dt) {
     if (!dt) return '';
-    return dt.replace('T', ' ') + ':00';
+    return dt.replace('T', ' ').slice(0, 19);
   }
 
   const handleQueryRecordings = async (e) => {
@@ -145,8 +145,8 @@ const Token = () => {
       params.append('deviceSerial', deviceSerial);
       params.append('protocol', protocol);
       params.append('type', '2'); // playback
-      params.append('startTime', rec.startTime.replace('T', ' '));
-      params.append('endTime', rec.endTime.replace('T', ' '));
+      params.append('startTime', toEzvizDate(rec.startTime));
+      params.append('endTime', toEzvizDate(rec.endTime));
       const response = await axios.post(
         `${result.areaDomain}/api/lapp/live/address/get`,
         params,
