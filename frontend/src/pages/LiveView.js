@@ -53,7 +53,7 @@ const LiveView = () => {
     } else if (url.endsWith('.flv')) {
       initializeFlv(url);
     }
-  }, []);
+  }, [initializeHls, initializeFlv]);
 
   // 1. Define fetchLiveStream primero
   const fetchLiveStream = useCallback(async () => {
