@@ -47,6 +47,15 @@ const Grabaciones = () => {
     }
   };
 
+  // Helper para convertir datetime-local a 'YYYY-MM-DD HH:mm:ss'
+  function toEzvizDate(dt) {
+    if (!dt) return '';
+    const [date, time] = dt.split('T');
+    if (!date || !time) return '';
+    const [hh, mm] = time.split(':');
+    return `${date} ${hh.padStart(2, '0')}:${mm.padStart(2, '0')}:00`;
+  }
+
   const handleQueryRecordings = async (e) => {
     e.preventDefault();
     if (!deviceSerial) {
@@ -70,8 +79,8 @@ const Grabaciones = () => {
     setRecordings([]);
     try {
       const params = new URLSearchParams();
-      params.append('startTime', playbackStart.replace('T', ' '));
-      params.append('endTime', playbackEnd.replace('T', ' '));
+      params.append('startTime', toEzvizDate(playbackStart));
+      params.append('endTime', toEzvizDate(playbackEnd));
       const response = await axios.get(
         `${tokenData.areaDomain}/api/v3/das/device/local/video/query?${params.toString()}`,
         { headers: { accessToken: tokenData.accessToken, deviceSerial: deviceSerial } }
