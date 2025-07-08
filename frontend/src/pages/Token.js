@@ -82,6 +82,12 @@ const Token = () => {
     }
   };
 
+  // Helper para convertir datetime-local a 'YYYY-MM-DD HH:mm:ss'
+  function toEzvizDate(dt) {
+    if (!dt) return '';
+    return dt.replace('T', ' ') + ':00';
+  }
+
   const handleQueryRecordings = async (e) => {
     e.preventDefault();
     setRecordingsLoading(true);
@@ -94,12 +100,12 @@ const Token = () => {
         return;
       }
       const params = new URLSearchParams();
-      params.append('accessToken', result.accessToken);
       params.append('deviceSerial', deviceSerial);
-      if (playbackStart) params.append('startTime', playbackStart);
-      if (playbackEnd) params.append('endTime', playbackEnd);
+      if (playbackStart) params.append('startTime', toEzvizDate(playbackStart));
+      if (playbackEnd) params.append('endTime', toEzvizDate(playbackEnd));
       const response = await axios.get(
-        `${result.areaDomain}/api/v3/das/device/local/video/query?${params.toString()}`
+        `${result.areaDomain}/api/v3/das/device/local/video/query?${params.toString()}`,
+        { headers: { accessToken: result.accessToken } }
       );
       if (response.data.meta?.code === 200) {
         setRecordings(response.data.data || []);
@@ -328,23 +334,23 @@ const Token = () => {
         <form onSubmit={handleQueryRecordings} className="bg-white shadow-md rounded px-8 pt-6 pb-8 mb-4 w-full max-w-md">
           <h2 className="text-lg font-bold mb-4">Buscar grabaciones</h2>
           <div className="mb-4">
-            <label className="block text-gray-700 text-sm font-bold mb-2">Fecha/hora inicio (YYYY-MM-DD HH:mm:ss)</label>
+            <label className="block text-gray-700 text-sm font-bold mb-2">Fecha/hora inicio</label>
             <input
-              type="text"
+              type="datetime-local"
               value={playbackStart}
               onChange={e => setPlaybackStart(e.target.value)}
               className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
-              placeholder="2025-07-07 00:00:00"
+              required
             />
           </div>
           <div className="mb-4">
-            <label className="block text-gray-700 text-sm font-bold mb-2">Fecha/hora fin (YYYY-MM-DD HH:mm:ss)</label>
+            <label className="block text-gray-700 text-sm font-bold mb-2">Fecha/hora fin</label>
             <input
-              type="text"
+              type="datetime-local"
               value={playbackEnd}
               onChange={e => setPlaybackEnd(e.target.value)}
               className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
-              placeholder="2025-07-08 23:59:59"
+              required
             />
           </div>
           <button
