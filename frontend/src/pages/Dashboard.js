@@ -29,6 +29,7 @@ const Dashboard = () => {
     unencrypted: 0
   });
   const [cameraError, setCameraError] = useState(false);
+  const [firstLoad, setFirstLoad] = useState(true);
 
   const { user, loading: authLoading } = useAuth();
 
@@ -36,6 +37,7 @@ const Dashboard = () => {
     if (!authLoading && user) {
       fetchCameras();
       fetchStats();
+      setFirstLoad(false);
     }
     // eslint-disable-next-line
   }, [authLoading, user]);
@@ -46,7 +48,7 @@ const Dashboard = () => {
       setCameras(response.data.cameras);
       if (cameraError) setCameraError(false); // Limpiar error si tiene éxito
     } catch (error) {
-      if (!cameraError) {
+      if (!firstLoad && !cameraError) {
         toast.error('Failed to load cameras');
         setCameraError(true);
       }
