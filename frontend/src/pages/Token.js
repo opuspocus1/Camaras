@@ -90,16 +90,31 @@ const Token = () => {
     }
   };
 
-  // Helper para convertir ISO o T a 'YYYY-MM-DD HH:mm:ss'
+  // Helper para convertir datetime-local a 'YYYY-MM-DD HH:mm:ss' con ceros a la izquierda y segundos
   function toEzvizDate(dt) {
     if (!dt) return '';
-    return dt.replace('T', ' ').slice(0, 19);
+    // dt: '2025-07-08T06:00' o '2025-07-08T06:00:00'
+    let [date, time] = dt.split('T');
+    if (!time) return '';
+    let [hh, mm, ss] = time.split(':');
+    if (typeof ss === 'undefined') ss = '00';
+    return `${date} ${hh.padStart(2, '0')}:${mm.padStart(2, '0')}:${ss.padStart(2, '0')}`;
   }
 
   const handleQueryRecordings = async (e) => {
     e.preventDefault();
     if (!deviceSerial) {
       setRecordingsError('Debes ingresar el Device Serial.');
+      return;
+    }
+    const start = toEzvizDate(playbackStart);
+    const end = toEzvizDate(playbackEnd);
+    if (!start || !end) {
+      setRecordingsError('Debes ingresar ambas fechas.');
+      return;
+    }
+    if (start >= end) {
+      setRecordingsError('La fecha/hora de inicio debe ser menor que la de fin.');
       return;
     }
     setRecordingsLoading(true);
@@ -112,8 +127,8 @@ const Token = () => {
         return;
       }
       const params = new URLSearchParams();
-      if (playbackStart) params.append('startTime', toEzvizDate(playbackStart));
-      if (playbackEnd) params.append('endTime', toEzvizDate(playbackEnd));
+      if (playbackStart) params.append('startTime', start);
+      if (playbackEnd) params.append('endTime', end);
       const response = await axios.get(
         `${result.areaDomain}/api/v3/das/device/local/video/query?${params.toString()}`,
         { headers: { accessToken: result.accessToken, deviceSerial: deviceSerial } }
