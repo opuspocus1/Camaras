@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import axios from 'axios';
 import flvjs from 'flv.js';
+import Hls from 'hls.js';
 
 const Token = () => {
   const [appKey, setAppKey] = useState('');
@@ -75,6 +76,7 @@ const Token = () => {
 
   React.useEffect(() => {
     let player;
+    let hls;
     const videoEl = videoRef.current;
     if (liveResult && liveResult.url && videoEl) {
       if (protocol === '4' && flvjs.isSupported()) {
@@ -83,13 +85,24 @@ const Token = () => {
         player.load();
         player.play();
       } else if (protocol === '2') {
-        videoEl.src = liveResult.url;
-        videoEl.load();
-        videoEl.play().catch(() => {});
+        if (videoEl.canPlayType('application/vnd.apple.mpegurl')) {
+          // Safari soporta HLS nativamente
+          videoEl.src = liveResult.url;
+          videoEl.load();
+          videoEl.play().catch(() => {});
+        } else if (Hls.isSupported()) {
+          hls = new Hls();
+          hls.loadSource(liveResult.url);
+          hls.attachMedia(videoEl);
+          hls.on(Hls.Events.MANIFEST_PARSED, function () {
+            videoEl.play().catch(() => {});
+          });
+        }
       }
     }
     return () => {
       if (player) player.destroy();
+      if (hls) hls.destroy();
       if (videoEl && protocol === '2') {
         videoEl.src = '';
       }
