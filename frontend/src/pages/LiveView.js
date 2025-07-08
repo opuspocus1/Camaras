@@ -107,7 +107,8 @@ const LiveView = () => {
     try {
       setLoading(true);
       setError(null);
-      const response = await axios.get(`${API_ENDPOINTS.LIVE_STREAM}/${deviceSerial}?protocol=2`);
+      // Cambia protocol=2 por protocol=4 para pedir FLV
+      const response = await axios.get(`${API_ENDPOINTS.LIVE_STREAM}/${deviceSerial}?protocol=4`);
       setStreamData(response.data.data);
       initializeStream(response.data.data.url);
     } catch (error) {
