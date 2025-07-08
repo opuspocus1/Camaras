@@ -118,9 +118,9 @@ const LiveView = () => {
     fetchLiveStreamRef.current = fetchLiveStream;
   }, [fetchLiveStream]);
 
-  // Efecto para inicializar el stream solo cuando la URL cambia y el videoRef está listo
+  // Efecto para inicializar el stream solo cuando la URL cambia
   useEffect(() => {
-    if (!streamData || !streamData.url || !videoRef.current) return;
+    if (!streamData || !streamData.url) return;
     console.log('Inicializando stream con URL:', streamData.url);
     destroyHls();
     destroyFlv();
@@ -130,7 +130,7 @@ const LiveView = () => {
       initializeFlv(streamData.url);
     }
     // eslint-disable-next-line
-  }, [streamData?.url, videoRef.current]);
+  }, [streamData?.url]);
 
   useEffect(() => {
     fetchCameraInfo();
@@ -150,6 +150,7 @@ const LiveView = () => {
 
   const destroyHls = () => {
     if (hlsRef.current) {
+      console.log('Destruyendo HLS player');
       hlsRef.current.destroy();
       hlsRef.current = null;
     }
@@ -157,6 +158,7 @@ const LiveView = () => {
 
   const destroyFlv = () => {
     if (flvRef.current) {
+      console.log('Destruyendo FLV player');
       flvRef.current.destroy();
       flvRef.current = null;
     }
