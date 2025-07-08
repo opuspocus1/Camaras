@@ -181,59 +181,29 @@ const Token = () => {
     }
   };
 
-  React.useEffect(() => {
-    let player;
-    let hls;
-    const videoEl = videoRef.current;
-    if (liveResult && liveResult.url && videoEl) {
-      if (protocol === '4' && flvjs.isSupported()) {
-        player = flvjs.createPlayer({ type: 'flv', url: liveResult.url });
-        player.attachMediaElement(videoEl);
-        player.load();
-        player.play();
-      } else if (protocol === '2') {
-        if (videoEl.canPlayType('application/vnd.apple.mpegurl')) {
-          // Safari soporta HLS nativamente
-          videoEl.src = liveResult.url;
-          videoEl.load();
-          videoEl.play().catch(() => {});
-        } else if (Hls.isSupported()) {
-          hls = new Hls();
-          hls.loadSource(liveResult.url);
-          hls.attachMedia(videoEl);
-          hls.on(Hls.Events.MANIFEST_PARSED, function () {
-            videoEl.play().catch(() => {});
-          });
-        }
-      }
-    }
-    return () => {
-      if (player) player.destroy();
-      if (hls) hls.destroy();
-      if (videoEl && protocol === '2') {
-        videoEl.src = '';
-      }
-    };
-  }, [liveResult, protocol]);
+  // Determinar si mostrar playback o live
+  const isPlayback = !!playbackResult && (protocol === '4' || protocol === '2');
+  const isLive = !!liveResult && !playbackResult && (protocol === '4' || protocol === '2');
+  const videoUrl = isPlayback ? playbackResult?.url : isLive ? liveResult?.url : null;
 
   React.useEffect(() => {
     let player;
     let hls;
     const videoEl = videoRef.current;
-    if (playbackResult && playbackResult.url && videoEl) {
+    if (videoUrl && videoEl) {
       if (protocol === '4' && flvjs.isSupported()) {
-        player = flvjs.createPlayer({ type: 'flv', url: playbackResult.url });
+        player = flvjs.createPlayer({ type: 'flv', url: videoUrl });
         player.attachMediaElement(videoEl);
         player.load();
         player.play();
       } else if (protocol === '2') {
         if (videoEl.canPlayType('application/vnd.apple.mpegurl')) {
-          videoEl.src = playbackResult.url;
+          videoEl.src = videoUrl;
           videoEl.load();
           videoEl.play().catch(() => {});
         } else if (Hls.isSupported()) {
           hls = new Hls();
-          hls.loadSource(playbackResult.url);
+          hls.loadSource(videoUrl);
           hls.attachMedia(videoEl);
           hls.on(Hls.Events.MANIFEST_PARSED, function () {
             videoEl.play().catch(() => {});
@@ -248,7 +218,7 @@ const Token = () => {
         videoEl.src = '';
       }
     };
-  }, [playbackResult, protocol]);
+  }, [videoUrl, protocol]);
 
   return (
     <div className="min-h-screen flex flex-col items-center justify-center bg-gray-100 p-4">
@@ -335,8 +305,8 @@ const Token = () => {
           <div><strong>Stream ID:</strong> {liveResult.id}</div>
         </div>
       )}
-      {/* Video render: solo uno visible a la vez */}
-      {liveResult && !playbackResult && (protocol === '4' || protocol === '2') && (
+      {/* Video render: solo uno visible a la vez, arriba de grabaciones */}
+      {(isLive || isPlayback) && videoUrl && (
         <div className="w-full max-w-md mb-6">
           <video
             ref={videoRef}
@@ -344,21 +314,6 @@ const Token = () => {
             autoPlay
             style={{ width: '100%', background: '#000', maxHeight: 360 }}
           />
-        </div>
-      )}
-      {playbackResult && (protocol === '4' || protocol === '2') && (
-        <div className="w-full max-w-md mb-6">
-          <video
-            ref={videoRef}
-            controls
-            autoPlay
-            style={{ width: '100%', background: '#000', maxHeight: 360 }}
-          />
-        </div>
-      )}
-      {liveResult && protocol === '3' && (
-        <div className="w-full max-w-md mb-6">
-          <div className="text-yellow-700">RTMP solo puede verse en VLC, OBS, etc. Copia la URL:</div>
         </div>
       )}
       {/* Playback Section */}
@@ -423,16 +378,6 @@ const Token = () => {
           <div><strong>Playback URL:</strong> <span className="break-all">{playbackResult.url}</span></div>
           <div><strong>Expire Time:</strong> {playbackResult.expireTime}</div>
           <div><strong>Stream ID:</strong> {playbackResult.id}</div>
-        </div>
-      )}
-      {playbackResult && (
-        <div className="w-full max-w-md mb-6">
-          <video
-            ref={videoRef}
-            controls
-            autoPlay
-            style={{ width: '100%', background: '#000', maxHeight: 360 }}
-          />
         </div>
       )}
     </div>
