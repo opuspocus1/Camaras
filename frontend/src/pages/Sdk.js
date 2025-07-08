@@ -1,15 +1,5 @@
 import React, { useEffect, useRef, useState } from "react";
-
-function loadEZUIKitScript(callback) {
-  if (window.EZUIKit) {
-    callback();
-    return;
-  }
-  const script = document.createElement("script");
-  script.src = "https://open.ys7.com/sdk/js/ezopen/EZUIKit.js";
-  script.onload = callback;
-  document.body.appendChild(script);
-}
+import EZUIKit from "ezuikit-js";
 
 const defaultValues = {
   accessToken: "",
@@ -31,7 +21,7 @@ function SdkPage() {
       if (player && player.destroy) player.destroy();
     };
     // eslint-disable-next-line
-  }, []);
+  }, [player]);
 
   const handleChange = (e) => {
     setForm({ ...form, [e.target.name]: e.target.value });
@@ -42,8 +32,6 @@ function SdkPage() {
     if (streamType === "live") {
       return `ezopen://open.ys7.com/${deviceSerial}/${channelNo}.live`;
     } else {
-      // playback: formato de url según doc oficial
-      // ezopen://open.ys7.com/{deviceSerial}/{channelNo}.rec?begin=yyyyMMddTHHmmssZ&end=yyyyMMddTHHmmssZ
       if (!startTime || !endTime) return "";
       return `ezopen://open.ys7.com/${deviceSerial}/${channelNo}.rec?begin=${startTime}&end=${endTime}`;
     }
@@ -65,25 +53,22 @@ function SdkPage() {
       setError("Faltan datos para construir la URL de reproducción");
       return;
     }
-    loadEZUIKitScript(() => {
-      if (player && player.destroy) player.destroy();
-      if (videoRef.current) videoRef.current.innerHTML = "";
-      const p = window.EZUIKit.createPlayer({
-        id: "video-container",
-        accessToken: form.accessToken,
-        url,
-        width: 600,
-        height: 400,
-        autoplay: true,
-        template: "simple",
-      });
-      setPlayer(p);
+    if (player && player.destroy) player.destroy();
+    if (videoRef.current) videoRef.current.innerHTML = "";
+    const p = new EZUIKit.EZUIKitPlayer({
+      id: "video-container",
+      accessToken: form.accessToken,
+      url,
+      width: 600,
+      height: 400,
+      template: "simple",
     });
+    setPlayer(p);
   };
 
   return (
     <div>
-      <h1>Prueba SDK EZVIZ</h1>
+      <h1>Prueba SDK EZVIZ (npm)</h1>
       <form onSubmit={handleInitPlayer} style={{ marginBottom: 20 }}>
         <div>
           <label>AccessToken: </label>
@@ -163,6 +148,7 @@ function SdkPage() {
         style={{ width: 600, height: 400, background: "#000" }}
       ></div>
       <p style={{marginTop: 20}}>
+        Usando la versión npm de <a href="https://github.com/Ezviz-OpenBiz/EZUIKit-JavaScript-npm" target="_blank" rel="noopener noreferrer">ezuikit-js</a>.<br/>
         Consulta la <a href="https://open.ys7.com/help/en/489" target="_blank" rel="noopener noreferrer">documentación oficial del SDK JS de EZVIZ</a> para más detalles.<br/>
         <a href="https://open.ys7.com/help/en/2034" target="_blank" rel="noopener noreferrer">Guía de integración</a> | 
         <a href="https://open.ys7.com/help/en/2035" target="_blank" rel="noopener noreferrer">API Reference</a> | 
