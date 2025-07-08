@@ -110,7 +110,7 @@ const LiveView = () => {
       // Cambia protocol=2 por protocol=4 para pedir FLV
       const response = await axios.get(`${API_ENDPOINTS.LIVE_STREAM}/${deviceSerial}?protocol=4`);
       setStreamData(response.data.data);
-      initializeStream(response.data.data.url);
+      // Quita initializeStream aquí
     } catch (error) {
       console.error('Error fetching live stream:', error);
       const message = error.response?.data?.error || 'Failed to load live stream';
@@ -119,13 +119,27 @@ const LiveView = () => {
     } finally {
       setLoading(false);
     }
-  }, [deviceSerial, initializeStream]);
+  }, [deviceSerial]);
 
   // 2. Usa un ref para evitar dependencia circular
   const fetchLiveStreamRef = useRef(fetchLiveStream);
   useEffect(() => {
     fetchLiveStreamRef.current = fetchLiveStream;
   }, [fetchLiveStream]);
+
+  // Efecto para inicializar el stream solo cuando la URL cambia y el videoRef está listo
+  useEffect(() => {
+    if (!streamData || !streamData.url || !videoRef.current) return;
+    console.log('Inicializando stream con URL:', streamData.url);
+    destroyHls();
+    destroyFlv();
+    if (streamData.url.endsWith('.m3u8')) {
+      initializeHls(streamData.url);
+    } else if (streamData.url.endsWith('.flv')) {
+      initializeFlv(streamData.url);
+    }
+    // eslint-disable-next-line
+  }, [streamData?.url, videoRef.current]);
 
   useEffect(() => {
     fetchCameraInfo();
