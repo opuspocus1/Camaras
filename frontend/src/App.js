@@ -9,6 +9,7 @@ import LiveView from './pages/LiveView';
 import PlaybackView from './pages/PlaybackView';
 import LoadingSpinner from './components/LoadingSpinner';
 import Token from './pages/Token';
+import Grabaciones from './pages/Grabaciones';
 
 // Protected Route Component
 const ProtectedRoute = ({ children }) => {
@@ -39,6 +40,10 @@ const AppContent = () => {
           <Route 
             path="/token"
             element={<Token />}
+          />
+          <Route 
+            path="/grabaciones"
+            element={<Grabaciones />}
           />
           <Route 
             path="/" 
