@@ -45,6 +45,53 @@ const LiveView = () => {
     }
   }, [deviceSerial]);
 
+  // 1. Define initializeHls primero y envuélvelo en useCallback
+  const initializeHls = useCallback((url) => {
+    if (Hls.isSupported()) {
+      const hls = new Hls({
+        enableWorker: true,
+        lowLatencyMode: true,
+        backBufferLength: 90
+      });
+      hls.loadSource(url);
+      hls.attachMediaElement(videoRef.current);
+      hls.on(Hls.Events.MANIFEST_PARSED, () => {
+        setIsPlaying(true);
+        videoRef.current.play().catch(console.error);
+      });
+      hls.on(Hls.Events.ERROR, (event, data) => {
+        console.error('HLS Error:', data);
+        if (data.fatal) {
+          toast.error('Video stream error. Please try again.');
+        }
+      });
+      hlsRef.current = hls;
+    } else if (videoRef.current.canPlayType('application/vnd.apple.mpegurl')) {
+      videoRef.current.src = url;
+      videoRef.current.addEventListener('loadedmetadata', () => {
+        setIsPlaying(true);
+        videoRef.current.play().catch(console.error);
+      });
+    }
+  }, []);
+
+  // 2. Define initializeFlv después y usa el ref para reconexión
+  const initializeFlv = useCallback((url) => {
+    if (flvjs.isSupported() && videoRef.current) {
+      const flvPlayer = flvjs.createPlayer({ type: 'flv', url });
+      flvPlayer.attachMediaElement(videoRef.current);
+      flvPlayer.load();
+      flvPlayer.play();
+      flvPlayer.on(flvjs.Events.ERROR, () => {
+        setTimeout(() => {
+          fetchLiveStreamRef.current();
+        }, 1000);
+      });
+      flvRef.current = flvPlayer;
+    }
+  }, []);
+
+  // 3. Define initializeStream después y ajusta dependencias
   const initializeStream = useCallback((url) => {
     destroyHls();
     destroyFlv();
@@ -79,25 +126,6 @@ const LiveView = () => {
     fetchLiveStreamRef.current = fetchLiveStream;
   }, [fetchLiveStream]);
 
-  // 3. Define initializeFlv después y usa el ref para reconexión
-  const initializeFlv = useCallback((url) => {
-    if (flvjs.isSupported() && videoRef.current) {
-      const flvPlayer = flvjs.createPlayer({ type: 'flv', url });
-      flvPlayer.attachMediaElement(videoRef.current);
-      flvPlayer.load();
-      flvPlayer.play();
-
-      // Reconexión automática si el stream se corta
-      flvPlayer.on(flvjs.Events.ERROR, () => {
-        setTimeout(() => {
-          fetchLiveStreamRef.current();
-        }, 1000);
-      });
-
-      flvRef.current = flvPlayer;
-    }
-  }, []);
-
   useEffect(() => {
     fetchCameraInfo();
     fetchLiveStream();
@@ -113,40 +141,6 @@ const LiveView = () => {
       destroyFlv();
     };
   }, [deviceSerial, fetchCameraInfo, fetchLiveStream]);
-
-  const initializeHls = (url) => {
-    if (Hls.isSupported()) {
-      const hls = new Hls({
-        enableWorker: true,
-        lowLatencyMode: true,
-        backBufferLength: 90
-      });
-      
-      hls.loadSource(url);
-      hls.attachMediaElement(videoRef.current);
-      
-      hls.on(Hls.Events.MANIFEST_PARSED, () => {
-        setIsPlaying(true);
-        videoRef.current.play().catch(console.error);
-      });
-      
-      hls.on(Hls.Events.ERROR, (event, data) => {
-        console.error('HLS Error:', data);
-        if (data.fatal) {
-          toast.error('Video stream error. Please try again.');
-        }
-      });
-      
-      hlsRef.current = hls;
-    } else if (videoRef.current.canPlayType('application/vnd.apple.mpegurl')) {
-      // Native HLS support (Safari)
-      videoRef.current.src = url;
-      videoRef.current.addEventListener('loadedmetadata', () => {
-        setIsPlaying(true);
-        videoRef.current.play().catch(console.error);
-      });
-    }
-  };
 
   const destroyHls = () => {
     if (hlsRef.current) {
