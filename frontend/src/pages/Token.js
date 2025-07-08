@@ -162,8 +162,11 @@ const Token = () => {
       params.append('deviceSerial', deviceSerial);
       params.append('protocol', protocol);
       params.append('type', '2'); // playback
-      params.append('startTime', toEzvizDate(rec.startTime));
-      params.append('endTime', toEzvizDate(rec.endTime));
+      // Usar los valores de la query, formateados correctamente
+      const start = rec.startTime.replace('T', ' ');
+      const end = rec.endTime.replace('T', ' ');
+      params.append('startTime', start);
+      params.append('endTime', end);
       const response = await axios.post(
         `${result.areaDomain}/api/lapp/live/address/get`,
         params,
