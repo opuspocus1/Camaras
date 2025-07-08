@@ -55,6 +55,26 @@ const LiveView = () => {
     }
   }, []);
 
+  // Envuelve initializeFlv en useCallback para que sea estable
+  const initializeFlv = useCallback((url) => {
+    if (flvjs.isSupported() && videoRef.current) {
+      const flvPlayer = flvjs.createPlayer({ type: 'flv', url });
+      flvPlayer.attachMediaElement(videoRef.current);
+      flvPlayer.load();
+      flvPlayer.play();
+
+      // Reconexión automática si el stream se corta
+      flvPlayer.on(flvjs.Events.ERROR, () => {
+        setTimeout(() => {
+          fetchLiveStream();
+        }, 1000);
+      });
+
+      flvRef.current = flvPlayer;
+    }
+  }, [fetchLiveStream]);
+
+  // Agrega initializeFlv como dependencia en fetchLiveStream
   const fetchLiveStream = useCallback(async () => {
     try {
       setLoading(true);
@@ -70,7 +90,7 @@ const LiveView = () => {
     } finally {
       setLoading(false);
     }
-  }, [deviceSerial, initializeStream]);
+  }, [deviceSerial, initializeStream, initializeFlv]);
 
   useEffect(() => {
     fetchCameraInfo();
@@ -119,25 +139,6 @@ const LiveView = () => {
         setIsPlaying(true);
         videoRef.current.play().catch(console.error);
       });
-    }
-  };
-
-  const initializeFlv = (url) => {
-    if (flvjs.isSupported() && videoRef.current) {
-      const flvPlayer = flvjs.createPlayer({ type: 'flv', url });
-      flvPlayer.attachMediaElement(videoRef.current);
-      flvPlayer.load();
-      flvPlayer.play();
-
-      // Reconexión automática si el stream se corta
-      flvPlayer.on(flvjs.Events.ERROR, () => {
-        // Espera un segundo antes de reconectar para evitar loops rápidos
-        setTimeout(() => {
-          fetchLiveStream();
-        }, 1000);
-      });
-
-      flvRef.current = flvPlayer;
     }
   };
 
