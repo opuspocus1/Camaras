@@ -112,12 +112,11 @@ const Token = () => {
         return;
       }
       const params = new URLSearchParams();
-      params.append('deviceSerial', deviceSerial);
       if (playbackStart) params.append('startTime', toEzvizDate(playbackStart));
       if (playbackEnd) params.append('endTime', toEzvizDate(playbackEnd));
       const response = await axios.get(
         `${result.areaDomain}/api/v3/das/device/local/video/query?${params.toString()}`,
-        { headers: { accessToken: result.accessToken } }
+        { headers: { accessToken: result.accessToken, deviceSerial: deviceSerial } }
       );
       if (response.data.meta?.code === 200) {
         setRecordings(response.data.data || []);
