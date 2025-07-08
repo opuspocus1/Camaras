@@ -28,6 +28,7 @@ const Dashboard = () => {
     encrypted: 0,
     unencrypted: 0
   });
+  const [cameraError, setCameraError] = useState(false);
 
   const { user, loading: authLoading } = useAuth();
 
@@ -36,15 +37,19 @@ const Dashboard = () => {
       fetchCameras();
       fetchStats();
     }
+    // eslint-disable-next-line
   }, [authLoading, user]);
 
   const fetchCameras = async () => {
     try {
       const response = await axios.get(API_ENDPOINTS.CAMERAS);
       setCameras(response.data.cameras);
+      if (cameraError) setCameraError(false); // Limpiar error si tiene éxito
     } catch (error) {
-      console.error('Error fetching cameras:', error);
-      toast.error('Failed to load cameras');
+      if (!cameraError) {
+        toast.error('Failed to load cameras');
+        setCameraError(true);
+      }
     }
   };
 
