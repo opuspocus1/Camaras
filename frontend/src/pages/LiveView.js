@@ -128,6 +128,15 @@ const LiveView = () => {
       flvPlayer.attachMediaElement(videoRef.current);
       flvPlayer.load();
       flvPlayer.play();
+
+      // Reconexión automática si el stream se corta
+      flvPlayer.on(flvjs.Events.ERROR, () => {
+        // Espera un segundo antes de reconectar para evitar loops rápidos
+        setTimeout(() => {
+          fetchLiveStream();
+        }, 1000);
+      });
+
       flvRef.current = flvPlayer;
     }
   };
