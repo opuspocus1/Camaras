@@ -63,6 +63,7 @@ const Token = () => {
     setLiveLoading(true);
     setLiveError(null);
     setLiveResult(null);
+    setPlaybackResult(null); // <-- Limpiar playback al pedir live
     try {
       if (!result?.accessToken || !result?.areaDomain) {
         setLiveError('Primero genera el token');
@@ -149,6 +150,7 @@ const Token = () => {
     setPlaybackLoading(true);
     setPlaybackError(null);
     setPlaybackResult(null);
+    setLiveResult(null); // <-- Limpiar live al pedir playback
     try {
       if (!result?.accessToken || !result?.areaDomain) {
         setPlaybackError('Primero genera el token');
@@ -333,7 +335,8 @@ const Token = () => {
           <div><strong>Stream ID:</strong> {liveResult.id}</div>
         </div>
       )}
-      {liveResult && protocol === '4' && (
+      {/* Video render: solo uno visible a la vez */}
+      {liveResult && !playbackResult && (protocol === '4' || protocol === '2') && (
         <div className="w-full max-w-md mb-6">
           <video
             ref={videoRef}
@@ -343,7 +346,7 @@ const Token = () => {
           />
         </div>
       )}
-      {liveResult && protocol === '2' && (
+      {playbackResult && (protocol === '4' || protocol === '2') && (
         <div className="w-full max-w-md mb-6">
           <video
             ref={videoRef}
