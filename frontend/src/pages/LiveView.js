@@ -194,6 +194,9 @@ const LiveView = () => {
     togglePlayPause();
   };
 
+  // EZVIZ FLV directo para pruebas (reemplaza con el tuyo si cambia)
+  const FLV_DIRECTO = "https://vtmforsa.ezvizlife.com:9188/v3/openlive/BC0314517_1_1.flv?expire=1814151486&id=862648736637739008&c=e7bdc2df4c&t=cb3c99585cd99487e440d557cdf8844a292aa700e062b6f1797d4e3a9f82a161&ev=100";
+
   if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gray-900">
@@ -253,6 +256,22 @@ const LiveView = () => {
             <span className="text-sm">LIVE</span>
           </div>
         </div>
+        {/* Botón de prueba FLV directo solo en desarrollo */}
+        {process.env.NODE_ENV === 'development' && (
+          <div className="mt-4 flex justify-center">
+            <button
+              onClick={() => {
+                setStreamData({ url: FLV_DIRECTO });
+                initializeFlv(FLV_DIRECTO);
+                setError(null);
+                setLoading(false);
+              }}
+              className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded shadow"
+            >
+              Probar FLV Directo
+            </button>
+          </div>
+        )}
       </div>
 
       {/* Video Container */}
