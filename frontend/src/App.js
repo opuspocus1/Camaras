@@ -8,6 +8,7 @@ import Dashboard from './pages/Dashboard';
 import LiveView from './pages/LiveView';
 import PlaybackView from './pages/PlaybackView';
 import LoadingSpinner from './components/LoadingSpinner';
+import Token from './pages/Token';
 
 // Protected Route Component
 const ProtectedRoute = ({ children }) => {
@@ -35,6 +36,10 @@ const AppContent = () => {
         <Routes>
           <Route path="/login" element={user ? <Navigate to="/" replace /> : <Login />} />
           <Route path="/register" element={user ? <Navigate to="/" replace /> : <Register />} />
+          <Route 
+            path="/token"
+            element={<Token />}
+          />
           <Route 
             path="/" 
             element={
