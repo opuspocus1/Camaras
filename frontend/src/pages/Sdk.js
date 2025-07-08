@@ -15,6 +15,9 @@ const defaultValues = {
   accessToken: "",
   deviceSerial: "",
   channelNo: 1,
+  streamType: "live", // live o playback
+  startTime: "", // formato: yyyyMMddTHHmmssZ
+  endTime: "",   // formato: yyyyMMddTHHmmssZ
 };
 
 function SdkPage() {
@@ -24,7 +27,6 @@ function SdkPage() {
   const videoRef = useRef(null);
 
   useEffect(() => {
-    // Limpia el reproductor al desmontar
     return () => {
       if (player && player.destroy) player.destroy();
     };
@@ -35,6 +37,18 @@ function SdkPage() {
     setForm({ ...form, [e.target.name]: e.target.value });
   };
 
+  function buildUrl() {
+    const { deviceSerial, channelNo, streamType, startTime, endTime } = form;
+    if (streamType === "live") {
+      return `ezopen://open.ys7.com/${deviceSerial}/${channelNo}.live`;
+    } else {
+      // playback: formato de url según doc oficial
+      // ezopen://open.ys7.com/{deviceSerial}/{channelNo}.rec?begin=yyyyMMddTHHmmssZ&end=yyyyMMddTHHmmssZ
+      if (!startTime || !endTime) return "";
+      return `ezopen://open.ys7.com/${deviceSerial}/${channelNo}.rec?begin=${startTime}&end=${endTime}`;
+    }
+  }
+
   const handleInitPlayer = (e) => {
     e.preventDefault();
     setError("");
@@ -42,19 +56,26 @@ function SdkPage() {
       setError("Debes ingresar accessToken y deviceSerial");
       return;
     }
+    if (form.streamType === "playback" && (!form.startTime || !form.endTime)) {
+      setError("Debes ingresar startTime y endTime para playback");
+      return;
+    }
+    const url = buildUrl();
+    if (!url) {
+      setError("Faltan datos para construir la URL de reproducción");
+      return;
+    }
     loadEZUIKitScript(() => {
       if (player && player.destroy) player.destroy();
-      // Limpia el contenedor
       if (videoRef.current) videoRef.current.innerHTML = "";
-      // Crea el reproductor
       const p = window.EZUIKit.createPlayer({
         id: "video-container",
         accessToken: form.accessToken,
-        url: `ezopen://open.ys7.com/${form.deviceSerial}/${form.channelNo}.live`,
+        url,
         width: 600,
         height: 400,
         autoplay: true,
-        template: "simple", // o "standard"
+        template: "simple",
       });
       setPlayer(p);
     });
@@ -98,6 +119,41 @@ function SdkPage() {
             style={{ width: 60 }}
           />
         </div>
+        <div>
+          <label>Tipo de stream: </label>
+          <select name="streamType" value={form.streamType} onChange={handleChange}>
+            <option value="live">En vivo</option>
+            <option value="playback">Playback (grabación)</option>
+          </select>
+        </div>
+        {form.streamType === "playback" && (
+          <>
+            <div>
+              <label>Start Time (yyyyMMddTHHmmssZ): </label>
+              <input
+                type="text"
+                name="startTime"
+                value={form.startTime}
+                onChange={handleChange}
+                placeholder="20240601T120000Z"
+                style={{ width: 180 }}
+                required={form.streamType === "playback"}
+              />
+            </div>
+            <div>
+              <label>End Time (yyyyMMddTHHmmssZ): </label>
+              <input
+                type="text"
+                name="endTime"
+                value={form.endTime}
+                onChange={handleChange}
+                placeholder="20240601T121000Z"
+                style={{ width: 180 }}
+                required={form.streamType === "playback"}
+              />
+            </div>
+          </>
+        )}
         <button type="submit" style={{ marginTop: 10 }}>Iniciar reproductor</button>
       </form>
       {error && <div style={{ color: "red", marginBottom: 10 }}>{error}</div>}
