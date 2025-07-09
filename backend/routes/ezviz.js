@@ -367,6 +367,7 @@ const axios = require('axios');
 
 router.all('/proxy/api/lapp/*', async (req, res) => {
   try {
+    console.log('=== INICIO PROXY EZVIZ LAPP ===', req.method, req.originalUrl);
     const lappPath = req.originalUrl.replace(/^\/api\/ezviz\/proxy/, '');
 
     let accessToken =
@@ -376,7 +377,6 @@ router.all('/proxy/api/lapp/*', async (req, res) => {
       req.headers?.authorization ||
       (require('../services/ezvizService').ezvizService?.accessToken);
 
-    // LOG DETALLADO PARA DEPURACIÓN (antes del return)
     console.log('EZVIZ Proxy:', {
       method: req.method,
       url: lappPath,
@@ -386,6 +386,7 @@ router.all('/proxy/api/lapp/*', async (req, res) => {
     });
 
     if (!accessToken) {
+      console.log('=== FIN PROXY EZVIZ LAPP (401) ===', req.method, req.originalUrl);
       return res.status(401).json({ error: 'No EZVIZ accessToken available' });
     }
 
@@ -426,6 +427,7 @@ router.all('/proxy/api/lapp/*', async (req, res) => {
       }
     });
     res.send(response.data);
+    console.log('=== FIN PROXY EZVIZ LAPP ===', req.method, req.originalUrl);
   } catch (error) {
     console.error('EZVIZ proxy error:', error);
     res.status(500).json({ error: 'EZVIZ proxy error', details: error.message, url: req.originalUrl });
@@ -434,6 +436,7 @@ router.all('/proxy/api/lapp/*', async (req, res) => {
 
 router.all('/proxy/api/service/*', async (req, res) => {
   try {
+    console.log('=== INICIO PROXY EZVIZ SERVICE ===', req.method, req.originalUrl);
     const servicePath = req.originalUrl.replace(/^\/api\/ezviz\/proxy/, '');
 
     let accessToken =
@@ -443,7 +446,6 @@ router.all('/proxy/api/service/*', async (req, res) => {
       req.headers?.authorization ||
       (require('../services/ezvizService').ezvizService?.accessToken);
 
-    // LOG DETALLADO PARA DEPURACIÓN (antes del return)
     console.log('EZVIZ Proxy:', {
       method: req.method,
       url: servicePath,
@@ -453,6 +455,7 @@ router.all('/proxy/api/service/*', async (req, res) => {
     });
 
     if (!accessToken) {
+      console.log('=== FIN PROXY EZVIZ SERVICE (401) ===', req.method, req.originalUrl);
       return res.status(401).json({ error: 'No EZVIZ accessToken available' });
     }
 
@@ -493,6 +496,7 @@ router.all('/proxy/api/service/*', async (req, res) => {
       }
     });
     res.send(response.data);
+    console.log('=== FIN PROXY EZVIZ SERVICE ===', req.method, req.originalUrl);
   } catch (error) {
     console.error('EZVIZ proxy error:', error);
     res.status(500).json({ error: 'EZVIZ proxy error', details: error.message, url: req.originalUrl });
