@@ -81,6 +81,7 @@ const startServer = async () => {
       console.log(`🚀 Server running on port ${PORT}`);
       console.log(`🌍 Environment: ${process.env.NODE_ENV || 'development'}`);
       console.log(`🔗 Health check: http://localhost:${PORT}/api/health`);
+      console.log('Servidor backend EZVIZ iniciado en modo producción. Último deploy:', new Date().toISOString());
     });
   } catch (error) {
     console.error('❌ Failed to start server:', error);
