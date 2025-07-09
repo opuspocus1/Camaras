@@ -1,2 +1,25 @@
-/*.wasm
-  Content-Type: application/wasm 
+# Headers para archivos WebAssembly
+*.wasm
+  Content-Type: application/wasm
+  Cache-Control: public, max-age=31536000
+
+# Headers para archivos JavaScript del SDK
+/lib/ezuikit-js/**
+  Cache-Control: public, max-age=31536000
+  Access-Control-Allow-Origin: *
+
+# Headers para archivos estáticos
+*.js
+  Cache-Control: public, max-age=31536000
+
+*.css
+  Cache-Control: public, max-age=31536000
+
+*.png
+  Cache-Control: public, max-age=31536000
+
+*.jpg
+  Cache-Control: public, max-age=31536000
+
+*.svg
+  Cache-Control: public, max-age=31536000 

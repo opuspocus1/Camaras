@@ -26,6 +26,7 @@ function SdkPage() {
   const [verificationCode, setVerificationCode] = useState("");
   const [generatedUrl, setGeneratedUrl] = useState("");
   const [playerStatus, setPlayerStatus] = useState("");
+  const [diagnosticInfo, setDiagnosticInfo] = useState({});
 
   useEffect(() => {
     return () => {
@@ -38,6 +39,32 @@ function SdkPage() {
       }
     };
   }, [player]);
+
+  // Función para obtener información de diagnóstico
+  const getDiagnosticInfo = () => {
+    const info = {
+      sdkLoaded: !!window.EZUIKit,
+      userAgent: navigator.userAgent,
+      webAssemblySupported: typeof WebAssembly !== 'undefined',
+      canvasSupported: !!document.createElement('canvas').getContext,
+      webGLSupported: (() => {
+        try {
+          const canvas = document.createElement('canvas');
+          return !!(canvas.getContext('webgl') || canvas.getContext('experimental-webgl'));
+        } catch (e) {
+          return false;
+        }
+      })(),
+      apiUrl: process.env.REACT_APP_API_URL || 'http://localhost:5000',
+      timestamp: new Date().toISOString()
+    };
+    setDiagnosticInfo(info);
+    return info;
+  };
+
+  useEffect(() => {
+    getDiagnosticInfo();
+  }, []);
 
   const handleChange = (e) => {
     setForm({ ...form, [e.target.name]: e.target.value });
@@ -101,6 +128,13 @@ function SdkPage() {
       return;
     }
 
+    // Verificar que EZUIKit esté disponible
+    if (!window.EZUIKit) {
+      setError("Error: El SDK EZUIKit no está cargado. Verifica que el archivo ezuikit.js esté disponible.");
+      setPlayerStatus("Error");
+      return;
+    }
+
     const url = buildUrl();
     setGeneratedUrl(url);
     
@@ -131,6 +165,8 @@ function SdkPage() {
       setPlayerStatus("Creando reproductor...");
       // Usar window.EZUIKit en vez de import
       const EZUIKit = window.EZUIKit;
+      
+      // Configuración mejorada del reproductor
       const p = new EZUIKit.EZUIKitPlayer({
         id: "video-container",
         accessToken: form.accessToken,
@@ -139,11 +175,26 @@ function SdkPage() {
         height: 400,
         template: "simple",
         audio: true,
-        decoderPath: "/lib/ezuikit-js/",
+        decoderPath: "/lib/ezuikit-js/ezuikit_static/",
         env: { 
           domain: `${process.env.REACT_APP_API_URL || 'http://localhost:5000'}/api/ezviz/proxy`,
           staticPath: "/lib/ezuikit-js/ezuikit_static"
         },
+        // Configuraciones adicionales para mejorar la estabilidad
+        autoPlay: false,
+        decoderType: "auto",
+        disableRenderPrivateData: true,
+        streamInfoCBType: 1,
+        iType: 2,
+        iMaxSplit: 1,
+        iCurrentSplit: 1,
+        szBasePath: "",
+        downloadRecord: true,
+        oStyle: {
+          border: "none",
+          background: "#000000"
+        },
+        decodeEngine: 1,
         handleSuccess: () => {
           console.log("Reproducción iniciada exitosamente");
           setPlayerStatus("Reproduciendo");
@@ -152,22 +203,40 @@ function SdkPage() {
         handleError: (err) => {
           console.error("Error en el reproductor:", err);
           setPlayerStatus("Error");
+          
+          // Manejo específico de errores comunes
           if (err && err.type === 'handleRunTimeInfoError') {
             switch(err.data?.nErrorCode) {
               case 5:
                 setError("Código de verificación incorrecto. Por favor, verifica el código de 6 dígitos de la cámara.");
                 break;
               case 7:
-                setError("El dispositivo está offline");
+                setError("El dispositivo está offline o no responde.");
                 break;
               case 2009:
-                setError("El dispositivo ha excedido el número máximo de conexiones");
+                setError("El dispositivo ha excedido el número máximo de conexiones.");
+                break;
+              case 2003:
+                setError("Dispositivo offline. Verifica que la cámara esté conectada a internet.");
+                break;
+              case 2007:
+                setError("Número de serie del dispositivo inválido.");
                 break;
               default:
-                setError(`Error del reproductor: ${err.data?.szErrorDescribe || err.message || 'Error desconocido'}`);
+                setError(`Error del reproductor (${err.data?.nErrorCode}): ${err.data?.szErrorDescribe || err.message || 'Error desconocido'}`);
+            }
+          } else if (err && err.message) {
+            if (err.message.includes('401')) {
+              setError("Error de autenticación. Verifica que el AccessToken sea válido y no haya expirado.");
+            } else if (err.message.includes('wasm')) {
+              setError("Error al cargar WebAssembly. Intenta recargar la página o usar un navegador diferente.");
+            } else if (err.message.includes('network')) {
+              setError("Error de red. Verifica tu conexión a internet.");
+            } else {
+              setError(`Error: ${err.message}`);
             }
           } else {
-            setError(`Error: ${err.message || 'Error desconocido'}`);
+            setError("Error desconocido en el reproductor. Verifica la consola del navegador para más detalles.");
           }
         }
       });
@@ -475,6 +544,46 @@ function SdkPage() {
             </a>
           </li>
         </ul>
+      </div>
+
+      {/* Información de diagnóstico */}
+      <div className="mt-6 bg-gray-50 p-4 rounded">
+        <h3 className="text-lg font-semibold mb-3">Información de Diagnóstico</h3>
+        <div className="grid grid-cols-2 gap-4 text-sm">
+          <div>
+            <p><strong>SDK Cargado:</strong> 
+              <span className={diagnosticInfo.sdkLoaded ? "text-green-600" : "text-red-600"}>
+                {diagnosticInfo.sdkLoaded ? " ✅ Sí" : " ❌ No"}
+              </span>
+            </p>
+            <p><strong>WebAssembly:</strong> 
+              <span className={diagnosticInfo.webAssemblySupported ? "text-green-600" : "text-red-600"}>
+                {diagnosticInfo.webAssemblySupported ? " ✅ Soportado" : " ❌ No soportado"}
+              </span>
+            </p>
+            <p><strong>Canvas:</strong> 
+              <span className={diagnosticInfo.canvasSupported ? "text-green-600" : "text-red-600"}>
+                {diagnosticInfo.canvasSupported ? " ✅ Soportado" : " ❌ No soportado"}
+              </span>
+            </p>
+            <p><strong>WebGL:</strong> 
+              <span className={diagnosticInfo.webGLSupported ? "text-green-600" : "text-red-600"}>
+                {diagnosticInfo.webGLSupported ? " ✅ Soportado" : " ❌ No soportado"}
+              </span>
+            </p>
+          </div>
+          <div>
+            <p><strong>API URL:</strong> <code className="text-xs">{diagnosticInfo.apiUrl}</code></p>
+            <p><strong>Navegador:</strong> <span className="text-xs">{diagnosticInfo.userAgent?.split(' ')[0]}</span></p>
+            <p><strong>Timestamp:</strong> <span className="text-xs">{diagnosticInfo.timestamp}</span></p>
+          </div>
+        </div>
+        <button 
+          onClick={getDiagnosticInfo}
+          className="mt-3 bg-gray-500 text-white px-3 py-1 rounded text-xs hover:bg-gray-600"
+        >
+          Actualizar Diagnóstico
+        </button>
       </div>
     </div>
   );

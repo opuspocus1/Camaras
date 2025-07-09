@@ -394,6 +394,19 @@ async function handleEzvizProxy(req, res, basePath) {
       bodyType: typeof req.body
     });
 
+    // Si no hay accessToken, intentar obtenerlo del servicio EZVIZ
+    if (!accessToken) {
+      try {
+        const { ezvizService } = require('../services/ezvizService');
+        if (ezvizService && ezvizService.accessToken) {
+          accessToken = ezvizService.accessToken;
+          console.log('Using accessToken from ezvizService');
+        }
+      } catch (error) {
+        console.log('Could not get accessToken from ezvizService:', error.message);
+      }
+    }
+
     if (!accessToken) {
       console.log(`=== FIN PROXY EZVIZ ${basePath} (401) ===`);
       return res.status(401).json({ 
