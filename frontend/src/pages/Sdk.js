@@ -19,6 +19,8 @@ function SdkPage() {
   const [appKey, setAppKey] = useState("");
   const [appSecret, setAppSecret] = useState("");
   const [tokenLoading, setTokenLoading] = useState(false);
+  const [verificationCode, setVerificationCode] = useState("");
+  const [generatedUrl, setGeneratedUrl] = useState("");
 
   useEffect(() => {
     return () => {
@@ -33,11 +35,14 @@ function SdkPage() {
 
   function buildUrl() {
     const { deviceSerial, channelNo, streamType, startTime, endTime } = form;
+    let urlBase = verificationCode
+      ? `ezopen://${verificationCode}@isaopen.ezviz.com/${deviceSerial}/${channelNo}`
+      : `ezopen://isaopen.ezviz.com/${deviceSerial}/${channelNo}`;
     if (streamType === "live") {
-      return `ezopen://open.ys7.com/${deviceSerial}/${channelNo}.live`;
+      return `${urlBase}.live`;
     } else {
       if (!startTime || !endTime) return "";
-      return `ezopen://open.ys7.com/${deviceSerial}/${channelNo}.rec?begin=${startTime}&end=${endTime}`;
+      return `${urlBase}.rec?begin=${startTime}&end=${endTime}`;
     }
   }
 
@@ -53,6 +58,7 @@ function SdkPage() {
       return;
     }
     const url = buildUrl();
+    setGeneratedUrl(url);
     if (!url) {
       setError("Faltan datos para construir la URL de reproducción");
       return;
@@ -129,6 +135,17 @@ function SdkPage() {
         </button>
       </form>
       <form onSubmit={handleInitPlayer} className="mb-6 space-y-4">
+        <div>
+          <label className="block text-sm font-medium mb-1">Verification Code (si tu cámara lo requiere): </label>
+          <input
+            type="text"
+            name="verificationCode"
+            value={verificationCode}
+            onChange={e => setVerificationCode(e.target.value)}
+            className="w-full p-2 border border-gray-300 rounded"
+            placeholder="Código de la etiqueta de la cámara"
+          />
+        </div>
         <div>
           <label className="block text-sm font-medium mb-1">AccessToken: </label>
           <input
@@ -211,6 +228,11 @@ function SdkPage() {
         </button>
       </form>
       {error && <div className="text-red-500 mb-4">{error}</div>}
+      {generatedUrl && (
+        <div className="mt-2 text-xs text-gray-500">
+          <strong>URL generada:</strong> {generatedUrl}
+        </div>
+      )}
       <div
         id="video-container"
         ref={videoRef}
