@@ -42,7 +42,7 @@ const Token = () => {
       params.append('appKey', appKey);
       params.append('appSecret', appSecret);
       const response = await axios.post(
-        'https://open.ezvizlife.com/api/lapp/token/get',
+        `${process.env.REACT_APP_API_URL || 'http://localhost:5000'}/api/ezviz/proxy/lapp/token/get`,
         params,
         { headers: { 'Content-Type': 'application/x-www-form-urlencoded' } }
       );
@@ -75,7 +75,7 @@ const Token = () => {
       params.append('deviceSerial', deviceSerial);
       params.append('protocol', protocol);
       const response = await axios.post(
-        `${result.areaDomain}/api/lapp/live/address/get`,
+        `${process.env.REACT_APP_API_URL || 'http://localhost:5000'}/api/ezviz/proxy/lapp/live/address/get`,
         params,
         { headers: { 'Content-Type': 'application/x-www-form-urlencoded' } }
       );
@@ -131,7 +131,7 @@ const Token = () => {
       if (playbackStart) params.append('startTime', start);
       if (playbackEnd) params.append('endTime', end);
       const response = await axios.get(
-        `${result.areaDomain}/api/v3/das/device/local/video/query?${params.toString()}`,
+        `${process.env.REACT_APP_API_URL || 'http://localhost:5000'}/api/ezviz/proxy/api/v3/das/device/local/video/query?${params.toString()}`,
         { headers: { accessToken: result.accessToken, deviceSerial: deviceSerial } }
       );
       if (response.data.meta?.code === 200) {
@@ -168,7 +168,7 @@ const Token = () => {
       params.append('startTime', start);
       params.append('endTime', end);
       const response = await axios.post(
-        `${result.areaDomain}/api/lapp/live/address/get`,
+        `${process.env.REACT_APP_API_URL || 'http://localhost:5000'}/api/ezviz/proxy/lapp/live/address/get`,
         params,
         { headers: { 'Content-Type': 'application/x-www-form-urlencoded' } }
       );

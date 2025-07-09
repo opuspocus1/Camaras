@@ -73,7 +73,7 @@ function SdkPage() {
       height: 400,
       template: "simple",
       decoderPath: "/lib/ezuikit-js/",
-      env: { domain: "isaopen.ezviz.com" },
+      env: { domain: `${process.env.REACT_APP_API_URL || 'http://localhost:5000'}/api/ezviz/proxy` },
     });
     setPlayer(p);
   };
@@ -87,7 +87,7 @@ function SdkPage() {
       params.append('appKey', appKey);
       params.append('appSecret', appSecret);
       const res = await axios.post(
-        "https://open.ezvizlife.com/api/lapp/token/get",
+        `${process.env.REACT_APP_API_URL || 'http://localhost:5000'}/api/ezviz/proxy/lapp/token/get`,
         params,
         { headers: { 'Content-Type': 'application/x-www-form-urlencoded' } }
       );

@@ -362,4 +362,42 @@ router.get('/status', async (req, res) => {
   }
 });
 
+// Proxy para /api/lapp/*
+const axios = require('axios');
+
+router.all('/proxy/lapp/*', async (req, res) => {
+  try {
+    // Obtener el path a reenviar
+    const lappPath = req.originalUrl.replace(/^\/api\/ezviz\/proxy/, '');
+    // Obtener accessToken (ajustar según tu lógica)
+    const accessToken = req.user?.ezvizAccessToken || (require('../services/ezvizService').ezvizService?.accessToken);
+    if (!accessToken) {
+      return res.status(401).json({ error: 'No EZVIZ accessToken available' });
+    }
+    // Construir la URL destino
+    const baseDomain = require('../services/ezvizService').ezvizService?.areaDomain || 'https://open.ezvizlife.com';
+    const url = `${baseDomain}${lappPath}`;
+    // Preparar headers
+    const headers = { ...req.headers, Host: undefined };
+    // Forzar el token en el body si es necesario
+    let data = req.body;
+    if (req.method === 'POST' && data && typeof data === 'object' && !data.accessToken) {
+      data = { ...data, accessToken };
+    }
+    // Hacer el request
+    const response = await axios({
+      method: req.method,
+      url,
+      headers,
+      data,
+      params: req.query,
+      validateStatus: () => true // Devolver siempre la respuesta
+    });
+    res.status(response.status).set(response.headers).send(response.data);
+  } catch (error) {
+    console.error('EZVIZ proxy error:', error);
+    res.status(500).json({ error: 'EZVIZ proxy error', details: error.message });
+  }
+});
+
 module.exports = router; 
