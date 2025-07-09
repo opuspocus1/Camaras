@@ -12,6 +12,9 @@ const ezvizRoutes = require('./routes/ezviz');
 
 const app = express();
 
+// Confía en el proxy de Render para obtener la IP real del cliente
+app.set('trust proxy', 1);
+
 // Security middleware
 app.use(helmet());
 app.use(compression());
