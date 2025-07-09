@@ -1,6 +1,9 @@
 import React, { useEffect, useRef, useState } from "react";
-import EZUIKit from "../lib/ezuikit-js/ezuikit.js";
+// import EZUIKit from "../lib/ezuikit-js/ezuikit.js"; // <-- Eliminado, ahora se usa window.EZUIKit
 import axios from "axios";
+
+// Asegúrate de tener en public/index.html:
+// <script src="/lib/ezuikit-js/ezuikit.js"></script>
 
 const defaultValues = {
   accessToken: "",
@@ -126,7 +129,8 @@ function SdkPage() {
 
     try {
       setPlayerStatus("Creando reproductor...");
-      
+      // Usar window.EZUIKit en vez de import
+      const EZUIKit = window.EZUIKit;
       const p = new EZUIKit.EZUIKitPlayer({
         id: "video-container",
         accessToken: form.accessToken,
