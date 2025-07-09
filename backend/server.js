@@ -59,7 +59,7 @@ app.get('/api/health', (req, res) => {
 // API routes
 app.use('/api/auth', authRoutes);
 app.use('/api/cameras', cameraRoutes);
-app.use('/api/ezviz', ezvizRoutes);
+app.use('/api/ezviz', ezvizRoutes); // <-- Esto debe ir antes del 404
 
 // Error handling middleware
 app.use((err, req, res, next) => {
@@ -70,7 +70,7 @@ app.use((err, req, res, next) => {
   });
 });
 
-// 404 handler
+// 404 handler (debe ser el ÚLTIMO)
 app.use('*', (req, res) => {
   res.status(404).json({ error: 'Route not found' });
 });
