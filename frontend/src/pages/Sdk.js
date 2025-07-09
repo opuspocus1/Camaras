@@ -1,5 +1,6 @@
 import React, { useEffect, useRef, useState } from "react";
 import EZUIKit from "../lib/ezuikit-js/ezuikit.js";
+import axios from "axios";
 
 const defaultValues = {
   accessToken: "",
@@ -15,6 +16,9 @@ function SdkPage() {
   const [player, setPlayer] = useState(null);
   const [error, setError] = useState("");
   const videoRef = useRef(null);
+  const [appKey, setAppKey] = useState("");
+  const [appSecret, setAppSecret] = useState("");
+  const [tokenLoading, setTokenLoading] = useState(false);
 
   useEffect(() => {
     return () => {
@@ -68,9 +72,58 @@ function SdkPage() {
     setPlayer(p);
   };
 
+  const handleGenerateToken = async (e) => {
+    e.preventDefault();
+    setTokenLoading(true);
+    setError("");
+    try {
+      const res = await axios.post("https://open.ezvizlife.com/api/lapp/token/get", {
+        appKey,
+        appSecret,
+      });
+      if (res.data && res.data.data && res.data.data.accessToken) {
+        setForm({ ...form, accessToken: res.data.data.accessToken });
+      } else {
+        setError("No se pudo obtener el AccessToken. Verifica tus credenciales.");
+      }
+    } catch (err) {
+      setError("Error al obtener el AccessToken. Verifica tus credenciales.");
+    }
+    setTokenLoading(false);
+  };
+
   return (
     <div className="container mx-auto p-6">
       <h1 className="text-2xl font-bold mb-6">Prueba SDK EZVIZ (Local)</h1>
+      <form onSubmit={handleGenerateToken} className="mb-4 space-y-2">
+        <div>
+          <label className="block text-sm font-medium mb-1">App Key: </label>
+          <input
+            type="text"
+            value={appKey}
+            onChange={e => setAppKey(e.target.value)}
+            className="w-full p-2 border border-gray-300 rounded"
+            required
+          />
+        </div>
+        <div>
+          <label className="block text-sm font-medium mb-1">App Secret: </label>
+          <input
+            type="text"
+            value={appSecret}
+            onChange={e => setAppSecret(e.target.value)}
+            className="w-full p-2 border border-gray-300 rounded"
+            required
+          />
+        </div>
+        <button
+          type="submit"
+          className="bg-green-500 text-white px-4 py-2 rounded hover:bg-green-600"
+          disabled={tokenLoading}
+        >
+          {tokenLoading ? "Generando..." : "Generar AccessToken"}
+        </button>
+      </form>
       <form onSubmit={handleInitPlayer} className="mb-6 space-y-4">
         <div>
           <label className="block text-sm font-medium mb-1">AccessToken: </label>
