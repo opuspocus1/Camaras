@@ -77,10 +77,14 @@ function SdkPage() {
     setTokenLoading(true);
     setError("");
     try {
-      const res = await axios.post("https://open.ezvizlife.com/api/lapp/token/get", {
-        appKey,
-        appSecret,
-      });
+      const params = new URLSearchParams();
+      params.append('appKey', appKey);
+      params.append('appSecret', appSecret);
+      const res = await axios.post(
+        "https://open.ezvizlife.com/api/lapp/token/get",
+        params,
+        { headers: { 'Content-Type': 'application/x-www-form-urlencoded' } }
+      );
       if (res.data && res.data.data && res.data.data.accessToken) {
         setForm({ ...form, accessToken: res.data.data.accessToken });
       } else {
