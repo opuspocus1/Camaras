@@ -10,6 +10,12 @@
   to = "/index.html"
   status = 200
 
+[[redirects]]
+  from = "/isaopen.ezviz.com/api/*"
+  to = "https://isaopen.ezviz.com/api/:splat"
+  status = 200
+  force = true
+
 [dev]
   command = "npm start"
   port = 3000
