@@ -376,6 +376,15 @@ router.all('/proxy/lapp/*', async (req, res) => {
       req.headers?.authorization ||
       (require('../services/ezvizService').ezvizService?.accessToken);
 
+    // LOG DETALLADO PARA DEPURACIÓN (antes del return)
+    console.log('EZVIZ Proxy:', {
+      method: req.method,
+      url: lappPath,
+      accessToken,
+      query: req.query,
+      body: req.body
+    });
+
     if (!accessToken) {
       return res.status(401).json({ error: 'No EZVIZ accessToken available' });
     }
@@ -400,17 +409,6 @@ router.all('/proxy/lapp/*', async (req, res) => {
     }
 
     let params = { ...req.query, accessToken };
-
-    // LOG DETALLADO PARA DEPURACIÓN
-    console.log('EZVIZ Proxy:', {
-      method: req.method,
-      url,
-      accessToken,
-      query: req.query,
-      body: req.body,
-      finalParams: params,
-      finalBody: data
-    });
 
     const response = await axios({
       method: req.method,
