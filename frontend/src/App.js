@@ -10,6 +10,7 @@ import PlaybackView from './pages/PlaybackView';
 import LoadingSpinner from './components/LoadingSpinner';
 import Token from './pages/Token';
 import Grabaciones from './pages/Grabaciones';
+import SdkPage from './pages/Sdk';
 
 // Protected Route Component
 const ProtectedRoute = ({ children }) => {
@@ -44,6 +45,10 @@ const AppContent = () => {
           <Route 
             path="/grabaciones"
             element={<Grabaciones />}
+          />
+          <Route 
+            path="/sdk"
+            element={<SdkPage />}
           />
           <Route 
             path="/" 
