@@ -365,12 +365,20 @@ router.get('/status', async (req, res) => {
 // Proxy para /api/lapp/*
 const axios = require('axios');
 
-router.all('/proxy/api/lapp/*', async (req, res) => {
-  console.log('Body recibido en proxy /proxy/api/lapp/*:', req.body); // <--- LOG AGREGADO
-  try {
-    console.log('=== INICIO PROXY EZVIZ LAPP ===', req.method, req.originalUrl);
-    const lappPath = req.originalUrl.replace(/^\/api\/ezviz\/proxy/, '');
+// Configurar axios para mayor tolerancia con timeouts
+const proxyAxios = axios.create({
+  timeout: 30000, // 30 segundos
+  maxContentLength: Infinity,
+  maxBodyLength: Infinity,
+});
 
+// Manejador genérico de proxy para todas las rutas EZVIZ
+async function handleEzvizProxy(req, res, basePath) {
+  try {
+    console.log(`=== INICIO PROXY EZVIZ ${basePath} ===`, req.method, req.originalUrl);
+    const apiPath = req.originalUrl.replace(/^\/api\/ezviz\/proxy/, '');
+
+    // Obtener accessToken de múltiples fuentes posibles
     let accessToken =
       req.body?.accessToken ||
       req.query?.accessToken ||
@@ -378,130 +386,132 @@ router.all('/proxy/api/lapp/*', async (req, res) => {
       req.headers?.authorization ||
       (require('../services/ezvizService').ezvizService?.accessToken);
 
-    console.log('EZVIZ Proxy:', {
+    console.log('EZVIZ Proxy Request:', {
       method: req.method,
-      url: lappPath,
-      accessToken,
+      path: apiPath,
+      hasToken: !!accessToken,
       query: req.query,
-      body: req.body
+      bodyType: typeof req.body
     });
 
     if (!accessToken) {
-      console.log('=== FIN PROXY EZVIZ LAPP (401) ===', req.method, req.originalUrl);
-      return res.status(401).json({ error: 'No EZVIZ accessToken available' });
+      console.log(`=== FIN PROXY EZVIZ ${basePath} (401) ===`);
+      return res.status(401).json({ 
+        error: 'No EZVIZ accessToken available',
+        code: 'NO_ACCESS_TOKEN'
+      });
     }
 
-    const baseDomain = require('../services/ezvizService').ezvizService?.areaDomain || 'https://open.ezvizlife.com';
-    const url = `${baseDomain}${lappPath}`;
+    // Usar el dominio correcto para Sudamérica
+    const baseDomain = require('../services/ezvizService').ezvizService?.areaDomain || 'https://isaopen.ezvizlife.com';
+    const url = `${baseDomain}${apiPath}`;
 
-    const headers = { ...req.headers };
-    delete headers.host;
-    delete headers.origin;
-    delete headers.referer;
+    // Preparar headers
+    const headers = { 
+      'Content-Type': req.headers['content-type'] || 'application/x-www-form-urlencoded',
+      'Accept': '*/*',
+      'User-Agent': 'EZUIKit-JavaScript/8.1.12',
+    };
 
+    // Para peticiones desde el SDK, mantener algunos headers específicos
+    if (req.headers['sdkversion']) {
+      headers['sdkVersion'] = req.headers['sdkversion'];
+    }
+
+    // Preparar datos según el método
     let data = req.body;
+    let params = { ...req.query };
+
     if (req.method === 'POST') {
-      if (typeof data === 'object') {
+      // Si es POST, agregar accessToken a los datos
+      if (headers['Content-Type'].includes('application/x-www-form-urlencoded')) {
+        const urlParams = new URLSearchParams();
+        urlParams.append('accessToken', accessToken);
+        
+        if (typeof data === 'object' && data !== null) {
+          Object.keys(data).forEach(key => {
+            if (key !== 'accessToken') {
+              urlParams.append(key, data[key]);
+            }
+          });
+        } else if (typeof data === 'string') {
+          // Si ya es string, parsearlo y agregar accessToken
+          const existingParams = new URLSearchParams(data);
+          existingParams.forEach((value, key) => {
+            if (key !== 'accessToken') {
+              urlParams.append(key, value);
+            }
+          });
+        }
+        
+        data = urlParams.toString();
+      } else if (headers['Content-Type'].includes('application/json')) {
         data = { ...data, accessToken };
-      } else if (typeof data === 'string') {
-        const params = new URLSearchParams(data);
-        params.set('accessToken', accessToken);
-        data = params.toString();
       }
+    } else if (req.method === 'GET') {
+      // Si es GET, agregar accessToken a los params
+      params.accessToken = accessToken;
     }
 
-    let params = { ...req.query, accessToken };
+    console.log('EZVIZ Proxy Request Details:', {
+      url,
+      method: req.method,
+      headers,
+      dataPreview: typeof data === 'string' ? data.substring(0, 100) : data
+    });
 
-    const response = await axios({
+    // Realizar la petición al servidor EZVIZ
+    const response = await proxyAxios({
       method: req.method,
       url,
       headers,
       data,
       params: req.method === 'GET' ? params : undefined,
-      validateStatus: () => true
+      validateStatus: () => true, // Aceptar cualquier status
+      responseType: 'arraybuffer' // Importante para manejar respuestas binarias
     });
 
+    // Log de respuesta
+    console.log('EZVIZ Proxy Response:', {
+      status: response.status,
+      contentType: response.headers['content-type'],
+      dataLength: response.data.length
+    });
+
+    // Configurar headers de respuesta
     res.status(response.status);
     Object.keys(response.headers).forEach(key => {
-      if (key.toLowerCase() !== 'content-encoding') {
+      const lowerKey = key.toLowerCase();
+      // Evitar headers problemáticos
+      if (!['content-encoding', 'transfer-encoding', 'connection'].includes(lowerKey)) {
         res.set(key, response.headers[key]);
       }
     });
-    res.send(response.data);
-    console.log('=== FIN PROXY EZVIZ LAPP ===', req.method, req.originalUrl);
+
+    // Enviar respuesta
+    res.send(Buffer.from(response.data));
+    console.log(`=== FIN PROXY EZVIZ ${basePath} ===`);
   } catch (error) {
-    console.error('EZVIZ proxy error:', error);
-    res.status(500).json({ error: 'EZVIZ proxy error', details: error.message, url: req.originalUrl });
-  }
-});
-
-router.all('/proxy/api/service/*', async (req, res) => {
-  try {
-    console.log('=== INICIO PROXY EZVIZ SERVICE ===', req.method, req.originalUrl);
-    const servicePath = req.originalUrl.replace(/^\/api\/ezviz\/proxy/, '');
-
-    let accessToken =
-      req.body?.accessToken ||
-      req.query?.accessToken ||
-      req.headers?.accesstoken ||
-      req.headers?.authorization ||
-      (require('../services/ezvizService').ezvizService?.accessToken);
-
-    console.log('EZVIZ Proxy:', {
-      method: req.method,
-      url: servicePath,
-      accessToken,
-      query: req.query,
-      body: req.body
-    });
-
-    if (!accessToken) {
-      console.log('=== FIN PROXY EZVIZ SERVICE (401) ===', req.method, req.originalUrl);
-      return res.status(401).json({ error: 'No EZVIZ accessToken available' });
+    console.error('EZVIZ proxy error:', error.message);
+    if (error.response) {
+      console.error('Error response:', {
+        status: error.response.status,
+        data: error.response.data?.toString?.()
+      });
     }
-
-    const baseDomain = require('../services/ezvizService').ezvizService?.areaDomain || 'https://open.ezvizlife.com';
-    const url = `${baseDomain}${servicePath}`;
-
-    const headers = { ...req.headers };
-    delete headers.host;
-    delete headers.origin;
-    delete headers.referer;
-
-    let data = req.body;
-    if (req.method === 'POST') {
-      if (typeof data === 'object') {
-        data = { ...data, accessToken };
-      } else if (typeof data === 'string') {
-        const params = new URLSearchParams(data);
-        params.set('accessToken', accessToken);
-        data = params.toString();
-      }
-    }
-
-    let params = { ...req.query, accessToken };
-
-    const response = await axios({
-      method: req.method,
-      url,
-      headers,
-      data,
-      params: req.method === 'GET' ? params : undefined,
-      validateStatus: () => true
+    
+    res.status(500).json({ 
+      error: 'EZVIZ proxy error', 
+      details: error.message,
+      code: 'PROXY_ERROR'
     });
-
-    res.status(response.status);
-    Object.keys(response.headers).forEach(key => {
-      if (key.toLowerCase() !== 'content-encoding') {
-        res.set(key, response.headers[key]);
-      }
-    });
-    res.send(response.data);
-    console.log('=== FIN PROXY EZVIZ SERVICE ===', req.method, req.originalUrl);
-  } catch (error) {
-    console.error('EZVIZ proxy error:', error);
-    res.status(500).json({ error: 'EZVIZ proxy error', details: error.message, url: req.originalUrl });
   }
-});
+}
+
+// Rutas de proxy para diferentes endpoints EZVIZ
+router.all('/proxy/api/lapp/*', (req, res) => handleEzvizProxy(req, res, 'LAPP'));
+router.all('/proxy/api/service/*', (req, res) => handleEzvizProxy(req, res, 'SERVICE'));
+router.all('/proxy/api/v3/*', (req, res) => handleEzvizProxy(req, res, 'V3'));
+router.all('/proxy/*', (req, res) => handleEzvizProxy(req, res, 'GENERAL'));
 
 module.exports = router; 

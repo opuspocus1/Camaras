@@ -5,7 +5,8 @@ const qs = require('qs');
 class EzvizService {
   constructor() {
     this.accessToken = process.env.EZVIZ_ACCESS_TOKEN;
-    this.areaDomain = process.env.EZVIZ_AREA_DOMAIN;
+    // Usar dominio de Sudamérica por defecto
+    this.areaDomain = process.env.EZVIZ_AREA_DOMAIN || 'https://isaopen.ezvizlife.com';
   }
 
   // Get current access token
@@ -18,9 +19,6 @@ class EzvizService {
 
   // Get area domain
   getAreaDomain() {
-    if (!this.areaDomain) {
-      throw new Error('EZVIZ area domain not available');
-    }
     return this.areaDomain;
   }
 
