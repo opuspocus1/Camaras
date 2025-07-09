@@ -62,6 +62,8 @@ function SdkPage() {
       width: 600,
       height: 400,
       template: "simple",
+      decoderPath: "/src/lib/ezuikit-js/",
+      env: { domain: "open.ezviz.com" },
     });
     setPlayer(p);
   };
