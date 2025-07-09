@@ -108,7 +108,7 @@ function SdkPage() {
       params.append('appKey', appKey);
       params.append('appSecret', appSecret);
       const res = await axios.post(
-        'https://open.ys7.com/api/lapp/token/get', // <--- DIRECTO A EZVIZ
+        'https://open.ezvizlife.com/api/lapp/token/get', // <--- ENDPOINT AMÉRICA/SUDAMÉRICA
         params,
         { headers: { 'Content-Type': 'application/x-www-form-urlencoded' } }
       );
