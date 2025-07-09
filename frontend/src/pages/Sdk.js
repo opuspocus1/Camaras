@@ -108,7 +108,7 @@ function SdkPage() {
       params.append('appKey', appKey);
       params.append('appSecret', appSecret);
       const res = await axios.post(
-        `${process.env.REACT_APP_API_URL || 'http://localhost:5000'}/api/ezviz/proxy/lapp/token/get`,
+        'https://open.ys7.com/api/lapp/token/get', // <--- DIRECTO A EZVIZ
         params,
         { headers: { 'Content-Type': 'application/x-www-form-urlencoded' } }
       );
