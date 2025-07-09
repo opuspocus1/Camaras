@@ -365,7 +365,7 @@ router.get('/status', async (req, res) => {
 // Proxy para /api/lapp/*
 const axios = require('axios');
 
-router.all('/proxy/lapp/*', async (req, res) => {
+router.all('/proxy/api/lapp/*', async (req, res) => {
   try {
     const lappPath = req.originalUrl.replace(/^\/api\/ezviz\/proxy/, '');
 
