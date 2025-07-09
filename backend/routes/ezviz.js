@@ -432,4 +432,71 @@ router.all('/proxy/api/lapp/*', async (req, res) => {
   }
 });
 
+router.all('/proxy/api/service/*', async (req, res) => {
+  try {
+    const servicePath = req.originalUrl.replace(/^\/api\/ezviz\/proxy/, '');
+
+    let accessToken =
+      req.body?.accessToken ||
+      req.query?.accessToken ||
+      req.headers?.accesstoken ||
+      req.headers?.authorization ||
+      (require('../services/ezvizService').ezvizService?.accessToken);
+
+    // LOG DETALLADO PARA DEPURACIÓN (antes del return)
+    console.log('EZVIZ Proxy:', {
+      method: req.method,
+      url: servicePath,
+      accessToken,
+      query: req.query,
+      body: req.body
+    });
+
+    if (!accessToken) {
+      return res.status(401).json({ error: 'No EZVIZ accessToken available' });
+    }
+
+    const baseDomain = require('../services/ezvizService').ezvizService?.areaDomain || 'https://open.ezvizlife.com';
+    const url = `${baseDomain}${servicePath}`;
+
+    const headers = { ...req.headers };
+    delete headers.host;
+    delete headers.origin;
+    delete headers.referer;
+
+    let data = req.body;
+    if (req.method === 'POST') {
+      if (typeof data === 'object') {
+        data = { ...data, accessToken };
+      } else if (typeof data === 'string') {
+        const params = new URLSearchParams(data);
+        params.set('accessToken', accessToken);
+        data = params.toString();
+      }
+    }
+
+    let params = { ...req.query, accessToken };
+
+    const response = await axios({
+      method: req.method,
+      url,
+      headers,
+      data,
+      params: req.method === 'GET' ? params : undefined,
+      validateStatus: () => true
+    });
+
+    res.status(response.status);
+    Object.keys(response.headers).forEach(key => {
+      if (key.toLowerCase() !== 'content-encoding') {
+        res.set(key, response.headers[key]);
+      }
+    });
+    res.send(response.data);
+  } catch (error) {
+    console.error('EZVIZ proxy error:', error);
+    res.status(500).json({ error: 'EZVIZ proxy error', details: error.message, url: req.originalUrl });
+  }
+});
+
 module.exports = router; 
