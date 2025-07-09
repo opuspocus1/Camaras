@@ -369,7 +369,6 @@ router.all('/proxy/lapp/*', async (req, res) => {
   try {
     const lappPath = req.originalUrl.replace(/^\/api\/ezviz\/proxy/, '');
 
-    // Obtener accessToken del body, query, headers o variable de entorno
     let accessToken =
       req.body?.accessToken ||
       req.query?.accessToken ||
@@ -381,17 +380,14 @@ router.all('/proxy/lapp/*', async (req, res) => {
       return res.status(401).json({ error: 'No EZVIZ accessToken available' });
     }
 
-    // Construir la URL destino
     const baseDomain = require('../services/ezvizService').ezvizService?.areaDomain || 'https://open.ezvizlife.com';
     const url = `${baseDomain}${lappPath}`;
 
-    // Preparar headers
     const headers = { ...req.headers };
     delete headers.host;
     delete headers.origin;
     delete headers.referer;
 
-    // Preparar data y query: SIEMPRE poner el accessToken correcto
     let data = req.body;
     if (req.method === 'POST') {
       if (typeof data === 'object') {
@@ -403,10 +399,19 @@ router.all('/proxy/lapp/*', async (req, res) => {
       }
     }
 
-    // Para GET, forzar el token en la query
     let params = { ...req.query, accessToken };
 
-    // Hacer el request
+    // LOG DETALLADO PARA DEPURACIÓN
+    console.log('EZVIZ Proxy:', {
+      method: req.method,
+      url,
+      accessToken,
+      query: req.query,
+      body: req.body,
+      finalParams: params,
+      finalBody: data
+    });
+
     const response = await axios({
       method: req.method,
       url,
