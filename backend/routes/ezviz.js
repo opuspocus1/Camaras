@@ -366,6 +366,7 @@ router.get('/status', async (req, res) => {
 const axios = require('axios');
 
 router.all('/proxy/api/lapp/*', async (req, res) => {
+  console.log('Body recibido en proxy /proxy/api/lapp/*:', req.body); // <--- LOG AGREGADO
   try {
     console.log('=== INICIO PROXY EZVIZ LAPP ===', req.method, req.originalUrl);
     const lappPath = req.originalUrl.replace(/^\/api\/ezviz\/proxy/, '');
