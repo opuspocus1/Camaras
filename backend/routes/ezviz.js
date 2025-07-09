@@ -367,78 +367,65 @@ const axios = require('axios');
 
 router.all('/proxy/lapp/*', async (req, res) => {
   try {
-    // Obtener el path a reenviar
     const lappPath = req.originalUrl.replace(/^\/api\/ezviz\/proxy/, '');
-    
-    // Obtener accessToken del body o headers
-    let accessToken = req.body?.accessToken || req.headers?.accessToken;
-    
-    // Si no hay token en el request, intentar obtenerlo del servicio
-    if (!accessToken) {
-      const ezvizService = require('../services/ezvizService');
-      accessToken = ezvizService.ezvizService?.accessToken;
-    }
-    
+
+    // Obtener accessToken del body, query, headers o variable de entorno
+    let accessToken =
+      req.body?.accessToken ||
+      req.query?.accessToken ||
+      req.headers?.accesstoken ||
+      req.headers?.authorization ||
+      (require('../services/ezvizService').ezvizService?.accessToken);
+
     if (!accessToken) {
       return res.status(401).json({ error: 'No EZVIZ accessToken available' });
     }
-    
+
     // Construir la URL destino
-    const ezvizService = require('../services/ezvizService');
-    const baseDomain = ezvizService.ezvizService?.areaDomain || 'https://open.ezvizlife.com';
+    const baseDomain = require('../services/ezvizService').ezvizService?.areaDomain || 'https://open.ezvizlife.com';
     const url = `${baseDomain}${lappPath}`;
-    
-    // Preparar headers (remover headers problemáticos)
+
+    // Preparar headers
     const headers = { ...req.headers };
     delete headers.host;
     delete headers.origin;
     delete headers.referer;
-    
-    // Preparar data
+
+    // Preparar data y query: SIEMPRE poner el accessToken correcto
     let data = req.body;
-    
-    // Para requests POST, asegurar que el accessToken esté en el body
-    if (req.method === 'POST' && data) {
+    if (req.method === 'POST') {
       if (typeof data === 'object') {
         data = { ...data, accessToken };
       } else if (typeof data === 'string') {
-        // Si es string (como URLSearchParams), agregar el token
         const params = new URLSearchParams(data);
-        params.append('accessToken', accessToken);
+        params.set('accessToken', accessToken);
         data = params.toString();
       }
     }
-    
-    console.log(`EZVIZ Proxy: ${req.method} ${url}`);
-    
+
+    // Para GET, forzar el token en la query
+    let params = { ...req.query, accessToken };
+
     // Hacer el request
     const response = await axios({
       method: req.method,
       url,
       headers,
       data,
-      params: req.method === 'GET' ? req.query : undefined,
-      validateStatus: () => true // Devolver siempre la respuesta
+      params: req.method === 'GET' ? params : undefined,
+      validateStatus: () => true
     });
-    
-    // Devolver la respuesta
+
     res.status(response.status);
-    
-    // Copiar headers relevantes
     Object.keys(response.headers).forEach(key => {
       if (key.toLowerCase() !== 'content-encoding') {
         res.set(key, response.headers[key]);
       }
     });
-    
     res.send(response.data);
   } catch (error) {
     console.error('EZVIZ proxy error:', error);
-    res.status(500).json({ 
-      error: 'EZVIZ proxy error', 
-      details: error.message,
-      url: req.originalUrl 
-    });
+    res.status(500).json({ error: 'EZVIZ proxy error', details: error.message, url: req.originalUrl });
   }
 });
 
