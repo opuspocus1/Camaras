@@ -41,6 +41,12 @@ app.use('/api/', limiter);
 app.use(express.json({ limit: '10mb' }));
 app.use(express.urlencoded({ extended: true, limit: '10mb' }));
 
+// Log global para imprimir todas las requests que llegan al backend
+app.use((req, res, next) => {
+  console.log('Request global:', req.method, req.originalUrl);
+  next();
+});
+
 // Health check endpoint for Render
 app.get('/api/health', (req, res) => {
   res.status(200).json({ 
