@@ -24,7 +24,13 @@ function SdkPage() {
 
   useEffect(() => {
     return () => {
-      if (player && player.destroy) player.destroy();
+      if (player && player.destroy) {
+        try {
+          player.destroy();
+        } catch (error) {
+          console.warn('Error destroying player:', error);
+        }
+      }
     };
     // eslint-disable-next-line
   }, [player]);
@@ -63,8 +69,20 @@ function SdkPage() {
       setError("Faltan datos para construir la URL de reproducción");
       return;
     }
-    if (player && player.destroy) player.destroy();
-    if (videoRef.current) videoRef.current.innerHTML = "";
+    if (player && player.destroy) {
+      try {
+        player.destroy();
+      } catch (error) {
+        console.warn('Error destroying previous player:', error);
+      }
+    }
+    if (videoRef.current) {
+      try {
+        videoRef.current.innerHTML = "";
+      } catch (error) {
+        console.warn('Error clearing video container:', error);
+      }
+    }
     const p = new EZUIKit.EZUIKitPlayer({
       id: "video-container",
       accessToken: form.accessToken,
@@ -73,7 +91,10 @@ function SdkPage() {
       height: 400,
       template: "simple",
       decoderPath: "/lib/ezuikit-js/",
-      env: { domain: `${process.env.REACT_APP_API_URL || 'http://localhost:5000'}/api/ezviz/proxy` },
+      env: { 
+        domain: `${process.env.REACT_APP_API_URL || 'http://localhost:5000'}/api/ezviz/proxy`,
+        staticPath: "/lib/ezuikit-js/ezuikit_static"
+      },
     });
     setPlayer(p);
   };
